@@ -1,0 +1,12 @@
+/data
+/res
+/doc
+/dist
+/build
+/pickles
+*.pyc
+.DS_Store
+*.egg-info
+*.tmproj
+*.ipynb
+*.tmp
