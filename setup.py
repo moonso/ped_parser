@@ -9,7 +9,7 @@ with open('README.txt') as file:
     long_description = file.read()
 
 setup(name="ped_parser",
-	version="0.1",
+	version="0.2",
 	author="Mans Magnusson",
 	author_email="mans.magnusson@scilifelab.se",
     license='BSD',
