@@ -34,11 +34,11 @@ else:
 
 class Family(object):
     """Base class for the family parsers."""
-    def __init__(self, family_id, individuals = []):
+    def __init__(self, family_id, individuals = [], models_of_inheritance=['NA']):
         super(Family, self).__init__()
         self.individuals = individuals # This is a list with individual objects
         self.family_id = family_id
-        self.models_of_inheritance = [] # List of models of inheritance that should be prioritized.
+        self.models_of_inheritance = models_of_inheritance # List of models of inheritance that should be prioritized.
     
     def family_check(self):
         """Check if the family members break the structure of the family in any way, eg. nonexistent parent, wrong sex on parent..."""

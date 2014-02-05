@@ -127,7 +127,7 @@ class FamilyParser(object):
 
         
         models_of_inheritance = info.get('Inheritance_model', 'NA')
-
+        
         correct_model_names = []
         for model in models_of_inheritance:
             if model in ['AR', 'AR_hom']:
@@ -135,6 +135,10 @@ class FamilyParser(object):
             elif model in ['AR_denovo', 'AR_hom_denovo']:
                 moel = 'AR_hom_denovo'
             correct_model_names.append(model)
+        
+        if correct_model_names != ['NA']:
+            self.families[fam_id].models_of_inheritance = correct_model_names
+            
         my_individual = individual.Individual(ind, fam_id, mother, father, sex, phenotype)
 
         self.families[my_individual.family].add_individual(my_individual)
@@ -153,7 +157,7 @@ def main():
     print 'Individuals: '
     for family in my_parser.families:
         print 'Fam', family
-        print my_parser.families[family].individuals
+        print my_parser.families[family].models_of_inheritance
     for family in my_parser.families:
         for individual in my_parser.families[family].individuals:
             print individual
