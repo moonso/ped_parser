@@ -24,10 +24,9 @@ import sys
 import os
 
 
-
 class Individual(object):
     """docstring for Individual"""
-    def __init__(self, ind, family='0', mother='0', father='0',sex='0',phenotype='0',models_of_inheritance=['NA']):
+    def __init__(self, ind, family='0', mother='0', father='0',sex='0',phenotype='0'):
         
         #TODO write test to throw exceptions if malformed input.
         
@@ -38,7 +37,6 @@ class Individual(object):
         self.sex = sex # Sex Integer
         self.phenotype = phenotype # Phenotype INTEGER 
         self.phasing = False # If we have phasing info for this individual BOOL
-        self.models_of_inheritance = models_of_inheritance
 
         self.siblings = {}
         self.grandparents = {}
@@ -78,7 +76,7 @@ class Individual(object):
     def __str__(self):
         """Returns what should be printed if object is printed."""
         ind_info = ['ind:', self.individual_id, 'family:', self.family, 'mother:', self.mother, 'father:', self.father,
-                     'sex:', self.sex, 'phenotype:', self.phenotype, 'prefered models:', ':'.join(self.models_of_inheritance)]
+                     'sex:', self.sex, 'phenotype:', self.phenotype]
         return ' '.join(ind_info)
 
 def main():
