@@ -85,7 +85,17 @@ class FamilyParser(object):
         
         line = individual_line.split('\t')
         if len(individual_line) < 6:
-            raise SyntaxError('One of the ped lines have to few entrys %s' % individual_line)
+            raise SyntaxError('One of the ped lines have to few entrys\n %s' % individual_line)
+        
+        if len(line) > len(header):
+            print header
+            print 'Header length:'. len(header)
+            print ''
+            print line
+            print 'Line length:', len(line)
+            print ''
+            raise SyntaxError('One of the ped lines have more antrys than specisfied in header\n %s' % individual_line)
+            
         
         info = {}
         
@@ -113,8 +123,6 @@ class FamilyParser(object):
             phenotype == '0'
         
         affection_status = ind.split('-')[-1][-1] # This in A (=affected) or U (=unaffected)
-        print 'Affection status:', affection_status
-        print 'Phenotype: ', phenotype
         
         
         if (affection_status == 'A' and phenotype != '2') or (affection_status == 'U' and phenotype == '2'):
