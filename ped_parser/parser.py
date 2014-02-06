@@ -72,6 +72,8 @@ class FamilyParser(object):
         mother = line[3]
         sex = line[4]
         phenotype = line[5]
+        
+        #Make shure that these are allways numbers
         if sex not in ['1', '2']:
             sex == '0'
         if phenotype not in ['1', '2']:
@@ -117,6 +119,7 @@ class FamilyParser(object):
         sex = info.get('Sex', '0') # 1=male, 2=female, other=unknown
         phenotype = info.get('Phenotype', '0') # -9, 0 = missing, 1=unaffected, 2=affected
         
+        #Make shure that these are allways numbers
         if sex not in ['1', '2']:
             sex == '0'
         if phenotype not in ['1', '2']:

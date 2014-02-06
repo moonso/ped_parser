@@ -34,8 +34,8 @@ class Individual(object):
         self.family = family #Family Id STRING
         self.mother = mother #Mother Id STRING
         self.father = father # Father Id STRING
-        self.sex = sex # Sex Integer
-        self.phenotype = phenotype # Phenotype INTEGER 
+        self.sex = int(sex) # Sex Integer
+        self.phenotype = int(phenotype) # Phenotype INTEGER 
         self.phasing = False # If we have phasing info for this individual BOOL
 
         self.siblings = {}
@@ -45,7 +45,7 @@ class Individual(object):
             
     def affected(self):
         """Returns true is affected and false if healthy or unknown(?)"""
-        if self.phenotype == '2':
+        if self.phenotype == 2:
             return True
         else:
             return False
@@ -76,7 +76,7 @@ class Individual(object):
     def __str__(self):
         """Returns what should be printed if object is printed."""
         ind_info = ['ind:', self.individual_id, 'family:', self.family, 'mother:', self.mother, 'father:', self.father,
-                     'sex:', self.sex, 'phenotype:', self.phenotype]
+                     'sex:', str(self.sex), 'phenotype:', str(self.phenotype)]
         return ' '.join(ind_info)
 
 def main():
