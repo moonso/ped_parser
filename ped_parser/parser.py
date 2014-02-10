@@ -145,7 +145,10 @@ class FamilyParser(object):
                 model = 'AR_hom'
             elif model in ['AR_denovo', 'AR_hom_denovo']:
                 model = 'AR_hom_denovo'
-            elif model not in ['AD' , 'AD_denovo', 'X', 'X_denovo', 'AR_compound', 'NA']:
+            elif model in ['NA', 'Na']:
+                model = 'NA'
+            elif model not in ['AD' , 'AD_denovo', 'X', 'X_denovo', 'AR_compound', 'NA', 'Na']:
+                print 'Incorrect model name:', model
                 print 'Legal models: AD , AD_denovo, X, X_denovo, AR_hom, AR_hom_denovo, AR_compound, NA'
                 raise SyntaxError('Unknown genetic model specified:\n %s' % individual_line)
             correct_model_names.append(model)
