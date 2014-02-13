@@ -31,6 +31,7 @@ Copyright (c) 2013 __MyCompanyName__. All rights reserved.
 import sys
 import os
 import argparse
+from string import whitespace
 from ped_parser import individual, family
 
 class FamilyParser(object):
@@ -44,7 +45,7 @@ class FamilyParser(object):
             line_count = 0
             for line in f:
                 individual_line = line.rstrip()
-                if line[0] != '#' and len(line) > 1:
+                if not individual_line.startswith('#') and not all(c in whitespace for c in individual_line):
                     if family_type == 'cmms':
                         self.cmms_parser(individual_line, self.header)
                     elif family_type == 'fam':
