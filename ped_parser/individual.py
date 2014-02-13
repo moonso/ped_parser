@@ -37,7 +37,12 @@ class Individual(object):
         self.sex = int(sex) # Sex Integer
         self.phenotype = int(phenotype) # Phenotype INTEGER 
         self.phasing = False # If we have phasing info for this individual BOOL
-
+        
+        if self.mother == '0' and self.father == '0':
+            self.has_parents = False
+        else:
+            self.has_parents = True
+        
         self.siblings = {}
         self.grandparents = {}
         self.first_cousins = {}
