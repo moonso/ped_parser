@@ -91,12 +91,12 @@ class FamilyParser(object):
             raise SyntaxError('One of the ped lines have to few entrys\n %s' % individual_line)
         
         if len(line) > len(header):
-            print header
-            print 'Header length:'. len(header)
-            print ''
-            print line
-            print 'Line length:', len(line)
-            print ''
+            print(header)
+            print('Header length: %s' % str(len(header)))
+            print('')
+            print(line)
+            print('Line length: %s' % str(len(line)))
+            print('')
             raise SyntaxError('One of the ped lines have more antrys than specisfied in header\n %s' % individual_line)
             
         
@@ -149,8 +149,8 @@ class FamilyParser(object):
             elif model in ['NA', 'Na']:
                 model = 'NA'
             elif model not in ['AD' , 'AD_denovo', 'X', 'X_denovo', 'AR_compound', 'NA', 'Na']:
-                print 'Incorrect model name:', model
-                print 'Legal models: AD , AD_denovo, X, X_denovo, AR_hom, AR_hom_denovo, AR_compound, NA'
+                print('Incorrect model name: %s' % model)
+                print('Legal models: AD , AD_denovo, X, X_denovo, AR_hom, AR_hom_denovo, AR_compound, NA')
                 raise SyntaxError('Unknown genetic model specified:\n %s' % individual_line)
             correct_model_names.append(model)
         
@@ -171,13 +171,13 @@ def main():
     infile = args.pedigree_file[0]
     file_type = args.file_type[0]
     my_parser = FamilyParser(infile, file_type)
-    print 'Families:' ,my_parser.families
+    print('Families:' ,my_parser.families)
     for family in my_parser.families:
-        print 'Fam', family
-        print 'Models:', my_parser.families[family].models_of_inheritance
-        print 'Individuals: '
+        print('Fam %s' % family)
+        print('Models: %s' % my_parser.families[family].models_of_inheritance)
+        print('Individuals: ')
         for individual in my_parser.families[family].individuals:
-            print individual
+            print(individual)
     
         
 

@@ -9,7 +9,7 @@ with open('README.txt') as file:
     long_description = file.read()
 
 setup(name="ped_parser",
-	version="0.2.6",
+	version="0.3",
 	author="Mans Magnusson",
 	author_email="mans.magnusson@scilifelab.se",
     license='BSD',
@@ -20,7 +20,8 @@ setup(name="ped_parser",
     # scripts=[''],
     classifiers = [
         "Programming Language :: Python",
-        "Development Status :: 3 - Alpha",
+        "Programming Language :: Python :: 3",
+        "Development Status :: 4 - Beta",
         "License :: OSI Approved :: BSD License",
         "Operating System :: MacOS :: MacOS X",
         "Intended Audience :: Science/Research",
