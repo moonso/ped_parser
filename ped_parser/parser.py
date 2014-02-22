@@ -92,11 +92,9 @@ class FamilyParser(object):
         
         if len(line) > len(header):
             print(header)
-            print('Header length: %s' % str(len(header)))
-            print('')
+            print('Header length: %s \n' % str(len(header)))
             print(line)
-            print('Line length: %s' % str(len(line)))
-            print('')
+            print('Line length: %s \n' % str(len(line)))
             raise SyntaxError('One of the ped lines have more antrys than specisfied in header\n %s' % individual_line)
             
         
