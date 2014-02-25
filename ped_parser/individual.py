@@ -26,7 +26,7 @@ import os
 
 class Individual(object):
     """docstring for Individual"""
-    def __init__(self, ind, family='0', mother='0', father='0',sex='0',phenotype='0'):
+    def __init__(self, ind, family='0', mother='0', father='0',sex='0',phenotype='0',phasing=False):
         
         #TODO write test to throw exceptions if malformed input.
         
@@ -34,15 +34,21 @@ class Individual(object):
         self.family = family #Family Id STRING
         self.mother = mother #Mother Id STRING
         self.father = father # Father Id STRING
-        self.sex = int(sex) # Sex Integer
-        self.phenotype = int(phenotype) # Phenotype INTEGER 
-        self.phasing = False # If we have phasing info for this individual BOOL
+        try:
+            self.sex = int(sex) # Sex Integer
+            self.phenotype = int(phenotype) # Phenotype INTEGER 
+        except ValueError:
+            raise SyntaxError('Sex and phenotype have to be integers.')
+            
+        self.phasing = phasing # If we have phasing info for this individual BOOL
         
         if self.mother == '0' and self.father == '0':
             self.has_parents = False
         else:
             self.has_parents = True
         
+        # These features will be added
+        #TODO make use of family relations:
         self.siblings = {}
         self.grandparents = {}
         self.first_cousins = {}
