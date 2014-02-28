@@ -46,8 +46,8 @@ class FamilyParser(object):
             for line in f:
                 individual_line = line.rstrip()
                 if not individual_line.startswith('#') and not all(c in whitespace for c in individual_line):
-                    if family_type == 'cmms':
-                        self.cmms_parser(individual_line, self.header)
+                    if family_type in ['cmms', 'mip']:
+                        self.cmms_parser(individual_line, self.header, family_type)
                     elif family_type == 'fam':
                         self.ped_parser(individual_line)
                     elif family_type == 'ped':
@@ -83,7 +83,7 @@ class FamilyParser(object):
         self.families[my_individual.family].add_individual(my_individual)
 
 
-    def cmms_parser(self, individual_line, header):
+    def cmms_parser(self, individual_line, header, family_type):
         """Parse a .ped ped file."""
         
         line = individual_line.split('\t')
@@ -124,17 +124,18 @@ class FamilyParser(object):
         if phenotype not in ['1', '2']:
             phenotype == '0'
         
-        affection_status = ind.split('-')[-1][-1] # This in A (=affected) or U (=unaffected)
-        
-        
-        if (affection_status == 'A' and phenotype != '2') or (affection_status == 'U' and phenotype == '2'):
-            raise SyntaxError('Affection status disagrees with phenotype:\n %s' % individual_line)
-        
-        sex_code = int(ind.split('-')[-1][:-1])# Males allways have odd numbers and womans even
-        
-        if (sex_code % 2 == 0 and sex != '2') or (sex_code % 2 != 0 and sex != '1'):
-            raise SyntaxError('Gender code in id disagrees with sex:\n %s' % individual_line)
-
+        if family_type == 'cmms':
+            affection_status = ind.split('-')[-1][-1] # This in A (=affected) or U (=unaffected)
+            
+            
+            if (affection_status == 'A' and phenotype != '2') or (affection_status == 'U' and phenotype == '2'):
+                raise SyntaxError('Affection status disagrees with phenotype:\n %s' % individual_line)
+                
+            sex_code = int(ind.split('-')[-1][:-1])# Males allways have odd numbers and womans even
+            
+            if (sex_code % 2 == 0 and sex != '2') or (sex_code % 2 != 0 and sex != '1'):
+                raise SyntaxError('Gender code in id disagrees with sex:\n %s' % individual_line)
+                
         
         models_of_inheritance = info.get('Inheritance_model', 'NA')
         
@@ -163,7 +164,7 @@ class FamilyParser(object):
 def main():
     parser = argparse.ArgumentParser(description="Parse different kind of pedigree files.")
     parser.add_argument('pedigree_file', type=str, nargs=1 , help='A file with pedigree information.')
-    parser.add_argument('-type', '--file_type', type=str, nargs=1, choices=['cmms', 'ped', 'fam'], 
+    parser.add_argument('-type', '--file_type', type=str, nargs=1, choices=['cmms', 'ped', 'fam', 'mip'], 
                         default=['ped'] , help='Pedigree file is in ped format.')
     args = parser.parse_args()
     infile = args.pedigree_file[0]
