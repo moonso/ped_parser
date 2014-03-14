@@ -40,7 +40,7 @@ class FamilyParser(object):
         super(FamilyParser, self).__init__()
         self.family_type = family_type
         self.families = {}
-        self.header = []
+        self.header = ['Family_ID', 'Sample_ID', 'Father', 'Mother', 'Sex', 'Phenotype']
         with open(infile, 'r') as f:
             line_count = 0
             for line in f:
@@ -87,6 +87,7 @@ class FamilyParser(object):
         """Parse a .ped ped file."""
         
         line = individual_line.split('\t')
+        
         if len(individual_line) < 6:
             raise SyntaxError('One of the ped lines have to few entrys\n %s' % individual_line)
         
@@ -124,18 +125,14 @@ class FamilyParser(object):
         if phenotype not in ['1', '2']:
             phenotype == '0'
         
+        # If cmms type we can check the sample names
         if family_type == 'cmms':
             affection_status = ind.split('-')[-1][-1] # This in A (=affected) or U (=unaffected)
-            
-            
             if (affection_status == 'A' and phenotype != '2') or (affection_status == 'U' and phenotype == '2'):
                 raise SyntaxError('Affection status disagrees with phenotype:\n %s' % individual_line)
-                
             sex_code = int(ind.split('-')[-1][:-1])# Males allways have odd numbers and womans even
-            
             if (sex_code % 2 == 0 and sex != '2') or (sex_code % 2 != 0 and sex != '1'):
                 raise SyntaxError('Gender code in id disagrees with sex:\n %s' % individual_line)
-                
         
         models_of_inheritance = info.get('Inheritance_model', 'NA')
         
