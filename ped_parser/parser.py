@@ -128,16 +128,11 @@ class FamilyParser(object):
         # If cmms type we can check the sample names
         if family_type == 'cmms':
             affection_status = ind.split('-')[-1][-1] # This in A (=affected) or U (=unaffected)
-            
-            
             if (affection_status == 'A' and phenotype != '2') or (affection_status == 'U' and phenotype == '2'):
                 raise SyntaxError('Affection status disagrees with phenotype:\n %s' % individual_line)
-                
             sex_code = int(ind.split('-')[-1][:-1])# Males allways have odd numbers and womans even
-            
             if (sex_code % 2 == 0 and sex != '2') or (sex_code % 2 != 0 and sex != '1'):
                 raise SyntaxError('Gender code in id disagrees with sex:\n %s' % individual_line)
-                
         
         models_of_inheritance = info.get('Inheritance_model', 'NA')
         
