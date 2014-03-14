@@ -40,12 +40,14 @@ class FamilyParser(object):
         super(FamilyParser, self).__init__()
         self.family_type = family_type
         self.families = {}
-        self.header = ['Family_ID', 'Sample_ID', 'Father', 'Mother', 'Sex', 'Phenotype']
+        self.header = ['FamilyID', 'SampleID', 'Father', 'Mother', 'Sex', 'Phenotype']
         with open(infile, 'r') as f:
             line_count = 0
             for line in f:
                 individual_line = line.rstrip()
-                if not individual_line.startswith('#') and not all(c in whitespace for c in individual_line):
+                if individual_line.startswith('#'):
+                    self.header = line[1:].split()                    
+                elif not all(c in whitespace for c in individual_line):
                     if family_type in ['cmms', 'mip']:
                         self.cmms_parser(individual_line, self.header, family_type)
                     elif family_type == 'fam':
@@ -54,8 +56,6 @@ class FamilyParser(object):
                         self.ped_parser(individual_line)
                     # elif family_type == 'broad':
                     #     self.broad_parser(individual_line, line_count)
-                else:
-                    self.header = line[1:].split()
     
     def ped_parser(self, individual_line):
         """Parse a .ped ped file."""
@@ -109,7 +109,7 @@ class FamilyParser(object):
                 info[header[i]] = line[i]
         
         fam_id = info.get('FamilyID', '0')
-        
+                
         if fam_id not in self.families:
             self.families[fam_id] = family.Family(fam_id)
         
@@ -124,7 +124,6 @@ class FamilyParser(object):
             sex == '0'
         if phenotype not in ['1', '2']:
             phenotype == '0'
-        
         # If cmms type we can check the sample names
         if family_type == 'cmms':
             affection_status = ind.split('-')[-1][-1] # This in A (=affected) or U (=unaffected)
@@ -135,7 +134,7 @@ class FamilyParser(object):
                 raise SyntaxError('Gender code in id disagrees with sex:\n %s' % individual_line)
         
         models_of_inheritance = info.get('Inheritance_model', ['NA'])
-        
+                
         correct_model_names = []
         for model in models_of_inheritance:
             if model in ['AR', 'AR_hom']:
