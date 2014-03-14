@@ -134,7 +134,7 @@ class FamilyParser(object):
             if (sex_code % 2 == 0 and sex != '2') or (sex_code % 2 != 0 and sex != '1'):
                 raise SyntaxError('Gender code in id disagrees with sex:\n %s' % individual_line)
         
-        models_of_inheritance = info.get('Inheritance_model', 'NA')
+        models_of_inheritance = info.get('Inheritance_model', ['NA'])
         
         correct_model_names = []
         for model in models_of_inheritance:
