@@ -21,20 +21,23 @@ class TestFamily(object):
     def setup_class(self):
         """Setup a simple family with family id 1, sick daughter id 1, healthy father id 2, healthy mother id 3"""
         # Create a family
-        self.family = family.Family(family_id = '1') 
+        self.fam_id = '1'
+        self.family = family.Family(family_id = self.fam_id) 
         # Create a sick daughter:
-        self.daughter = individual.Individual(ind = '1', family = '1', mother = '3', father = '2', sex = 2, phenotype = 2)
+        self.daughter = individual.Individual(ind = '1', family = self.fam_id, mother = '3', father = '2', sex = 2, phenotype = 2)
         # Create a healthy son:
-        self.son = individual.Individual(ind = '4', family = '1', mother = '3', father = '2', sex = 1, phenotype = 1)        
+        self.son = individual.Individual(ind = '4', family = self.fam_id, mother = '3', father = '2', sex = 1, phenotype = 1)        
         # Create a healthy father 
-        self.father = individual.Individual(ind = '2', family = '1', mother = '0', father = '0', sex = 1, phenotype = 1)
+        self.father = individual.Individual(ind = '2', family = self.fam_id, mother = '0', father = '0', sex = 1, phenotype = 1)
         # Create a healthy mother
-        self.mother = individual.Individual(ind = '3', family = '1', mother = '0', father = '0', sex = 2, phenotype = 1)
+        self.mother = individual.Individual(ind = '3', family = self.fam_id, mother = '0', father = '0', sex = 2, phenotype = 1)
         self.family.add_individual(self.daughter)
         self.family.add_individual(self.son)
         self.family.add_individual(self.father)
         self.family.add_individual(self.mother)
         self.family.family_check()
+        print(self.family)
+        print(self.family.individuals)
     
     def test_individuals(self):
         """Test if all individuals are at place"""
@@ -45,7 +48,7 @@ class TestFamily(object):
         assert not '5' in self.family.individuals
 
     def test_family_relations(self):
-        """Test if the family reöations are correct"""
+        """Test if the family relations are correct"""
         assert self.daughter.individual_id in self.son.siblings
         assert self.son.individual_id in self.daughter.siblings
         # Mother and father should not be siblings in this case:

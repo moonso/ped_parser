@@ -32,12 +32,13 @@ class Family(object):
     """Base class for the family parsers."""
     def __init__(self, family_id, individuals = {}, models_of_inheritance=['NA']):
         super(Family, self).__init__()
-        self.individuals = individuals # This is a list with individual objects
+        self.individuals = individuals # This is a dict with individual objects
         self.family_id = family_id
         self.models_of_inheritance = models_of_inheritance # List of models of inheritance that should be prioritized.
     
     def family_check(self):
-        """Check if the family members break the structure of the family in any way, eg. nonexistent parent, wrong sex on parent..."""
+        """Check if the family members break the structure of the family in any way, eg. nonexistent parent, 
+            wrong sex on parent..."""
         #TODO Make some tests for these
         for individual in self.individuals:
             if self.individuals[individual].has_parents:
@@ -52,7 +53,7 @@ class Family(object):
         """Check if the parent info is correct"""
         if parent_id != '0':
             if parent_id not in self.individuals:
-                print('Warning parent %s is not in family.' % parent_id)
+                raise SyntaxError('Parent %s is not in family.' % parent_id)
             if father:
                 if self.individuals[parent_id].sex != 1:
                     raise SyntaxError('Father %s is not specified as male.' % parent_id)
@@ -91,7 +92,7 @@ class Family(object):
     
     def __str__(self):
         """Print the family members of this family"""
-        family = [individual.individual_id for individual in self.individuals]
+        family = list(self.individuals.keys())
         return "\t".join(family)
 
 
