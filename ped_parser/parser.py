@@ -31,7 +31,7 @@ Copyright (c) 2013 __MyCompanyName__. All rights reserved.
 import sys
 import os
 import argparse
-from codecs import open
+from codecs import open#!/usr/bin/env python
 from string import whitespace
 from ped_parser import individual, family
 
