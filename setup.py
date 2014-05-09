@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 try:
     from setuptools import setup
 except ImportError:
@@ -9,10 +7,11 @@ with open('README.txt') as file:
     long_description = file.read()
 
 setup(name="ped_parser",
-	version="0.3.7",
+	version="0.4",
 	author="Mans Magnusson",
 	author_email="mans.magnusson@scilifelab.se",
-    license='BSD',
+    license='MIT License',
+    install_requires=['pytest'],
 	description=("A ped file parser."),
 	long_description = long_description,
     packages={'ped_parser'},
