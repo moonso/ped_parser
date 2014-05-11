@@ -56,6 +56,8 @@ class FamilyParser(object):
             #     self.broad_parser(individual_line, line_count)
         for family in self.families:
             self.families[family].family_check()
+            # print(self.families[family].trios)
+            # print(self.families[family].duos)
     
     def ped_parser(self, family_file):
         """Parse a .ped ped file."""
@@ -64,7 +66,9 @@ class FamilyParser(object):
             if not line.startswith('#') and not all(c in whitespace for c in line.rstrip()):
                 line = line.rstrip().split('\t')
                 if len(line) != 6:
-                    raise SyntaxError('One of the ped lines have to few entrys %s' % line)
+                    line = line.rstrip().split()
+                    if len(line) != 6:
+                        raise SyntaxError('One of the ped lines have to few entrys %s' % line)
                 if len(line) > 1:
                     fam_id = line[0]
                     
