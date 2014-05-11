@@ -3,11 +3,11 @@ try:
 except ImportError:
     from distutils.core import setup
 
-with open('README.txt') as file:
-    long_description = file.read()
+# with open('README.txt') as file:
+long_description = 'A pedigree parser.'
 
 setup(name="ped_parser",
-	version="0.4",
+	version="0.5",
 	author="Mans Magnusson",
 	author_email="mans.magnusson@scilifelab.se",
     license='MIT License',

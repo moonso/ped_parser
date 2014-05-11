@@ -64,22 +64,22 @@ class FamilyParser(object):
         
         for line in family_file:
             if not line.startswith('#') and not all(c in whitespace for c in line.rstrip()):
-                line = line.rstrip().split('\t')
-                if len(line) != 6:
-                    line = line.rstrip().split()
-                    if len(line) != 6:
-                        raise SyntaxError('One of the ped lines have to few entrys %s' % line)
-                if len(line) > 1:
-                    fam_id = line[0]
+                splitted_line = line.rstrip().split('\t')
+                if len(splitted_line) != 6:
+                    splitted_line = line.rstrip().split()
+                    if len(splitted_line) != 6:
+                        raise SyntaxError("""One of the ped lines have %s number of entrys: %s""" % (line, len(splitted_line)))
+                if len(splitted_line) > 1:
+                    fam_id = splitted_line[0]
                     
                     if fam_id not in self.families:
                         self.families[fam_id] = family.Family(fam_id)
                     
-                    ind = line[1]
-                    father = line[2]
-                    mother = line[3]
-                    sex = line[4]
-                    phenotype = line[5]
+                    ind = splitted_line[1]
+                    father = splitted_line[2]
+                    mother = splitted_line[3]
+                    sex = splitted_line[4]
+                    phenotype = splitted_line[5]
                     
                     #Make shure that these are allways numbers
                     if sex not in ['1', '2']:
@@ -173,7 +173,7 @@ class FamilyParser(object):
 def main():
     parser = argparse.ArgumentParser(description="Parse different kind of pedigree files.")
     parser.add_argument('pedigree_file', type=str, nargs=1 , help='A file with pedigree information.')
-    parser.add_argument('-type', '--file_type', type=str, nargs=1, choices=['cmms', 'ped', 'fam', 'mip'], 
+    parser.add_argument('-type', '--file_type', type=str, nargs=1, choices=['cmms', 'ped', 'fam', 'mip', 'alt'], 
                         default=['ped'] , help='Pedigree file is in ped format.')
     args = parser.parse_args()
     infile = args.pedigree_file[0]
