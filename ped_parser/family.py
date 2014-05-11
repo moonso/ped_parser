@@ -60,7 +60,6 @@ class Family(object):
             for individual_2 in self.individuals:
                 if self.check_siblings(individual, individual_2):
                     self.individuals[individual].siblings[individual_2] = self.individuals[individual_2]
-                    self.individuals[individual_2].siblings[individual] = self.individuals[individual]
     
     def check_parent(self, parent_id, father = False):
         """Check if the parent info is correct. If an individual is not present in file raise exeption."""
