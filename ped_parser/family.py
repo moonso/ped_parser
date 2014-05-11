@@ -102,6 +102,11 @@ class Family(object):
                 phenotype = self.individuals[individual].phenotype
         return phenotype
     
+    def print_trios(self):
+        """Print the trios found as pedigree files"""
+        for trio in self.trios:
+            print(trio)
+    
     def __str__(self):
         """Print the family members of this family"""
         family = list(self.individuals.keys())
