@@ -41,10 +41,14 @@ class Individual(object):
             raise SyntaxError('Sex and phenotype have to be integers.')
             
         self.phasing = phasing # If we have phasing info for this individual BOOL
+        self.has_parents = False
+        self.has_both_parents = False
         
-        if self.mother == '0' and self.father == '0':
-            self.has_parents = False
-        else:
+        if self.mother != '0':
+            self.has_parents = True
+            if self.father != '0':
+                self.has_both_parents = True
+        elif self.father != '0':
             self.has_parents = True
         
         # These features will be added
