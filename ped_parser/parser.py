@@ -126,48 +126,51 @@ class FamilyParser(object):
     def check_cmms_file(self, family_file, family_type):
         """Parse a .ped ped file."""
         
+        family_file.seek(0)
+        
         for individual_line in family_file:
-            
-            line = individual_line.rstrip().split('\t')
-            
-            for i in range(len(line)):
-                if self.header[i] == 'Inheritance_model':
-                    #If inheritance model is specified it is a ';'-separated list of models
-                    info[self.header[i]] = line[i].split(';')
-                else:
-                    info[self.header[i]] = line[i]
-            ind = line[0]
-            
-        # If cmms type we can check the sample names
-        if family_type == 'cmms':
-            affection_status = ind.split('-')[-1][-1] # This in A (=affected) or U (=unaffected)
-            phenotype = self.individuals[ind].phenotype
-            sex = self.individuals[ind].sex
-            if (affection_status == 'A' and phenotype != '2' or 
-                affection_status == 'U' and phenotype != '1'):
-                raise SyntaxError('Affection status disagrees with phenotype:\n %s' % individual_line)
-            sex_code = int(ind.split('-')[-1][:-1])# Males allways have odd numbers and womans even
-            if (sex_code % 2 == 0 and sex != 2) or (sex_code % 2 != 0 and sex != 1):
-                raise SyntaxError('Gender code in id disagrees with sex:\n %s' % individual_line)
-        
-        models_of_inheritance = info.get('Inheritance_model', ['NA'])
-        
-        correct_model_names = []
-        for model in models_of_inheritance:
-            if model in ['AR', 'AR_hom']:
-                model = 'AR_hom'
-            elif model in ['AR_denovo', 'AR_hom_denovo']:
-                model = 'AR_hom_denovo'
-            elif model in ['NA', 'Na']:
-                model = 'NA'
-            elif model not in ['AD' , 'AD_denovo', 'X', 'X_denovo', 'AR_compound', 'NA', 'Na']:
-                print('Incorrect model name: %s' % model)
-                print('Legal models: AD , AD_denovo, X, X_denovo, AR_hom, AR_hom_denovo, AR_compound, NA')
-                raise SyntaxError('Unknown genetic model specified:\n %s' % individual_line)
-            correct_model_names.append(model)
-        
-        if correct_model_names != ['NA']:
-            self.families[fam_id].models_of_inheritance = correct_model_names
+            if not individual_line.startswith('#'):
+                line = individual_line.rstrip().split('\t')
+                info = {}
+                for i in range(len(line)):
+                    if self.header[i] == 'Inheritance_model':
+                        #If inheritance model is specified it is a ';'-separated list of models
+                        info[self.header[i]] = line[i].split(';')
+                    else:
+                        info[self.header[i]] = line[i]
+                ind = info['SampleID']
+                fam_id = info['FamilyID']
+                
+                # If cmms type we can check the sample names
+                if family_type == 'cmms':
+                    affection_status = ind.split('-')[-1][-1] # This in A (=affected) or U (=unaffected)
+                    phenotype = self.individuals[ind].phenotype
+                    sex = self.individuals[ind].sex
+                    if (affection_status == 'A' and phenotype != 2 or 
+                        affection_status == 'U' and phenotype != 1):
+                        raise SyntaxError('Affection status disagrees with phenotype:\n %s' % individual_line)
+                    sex_code = int(ind.split('-')[-1][:-1])# Males allways have odd numbers and womans even
+                    if (sex_code % 2 == 0 and sex != 2) or (sex_code % 2 != 0 and sex != 1):
+                        raise SyntaxError('Gender code in id disagrees with sex:\n %s' % individual_line)
+                
+                models_of_inheritance = info.get('Inheritance_model', ['NA'])
+                
+                correct_model_names = []
+                for model in models_of_inheritance:
+                    if model in ['AR', 'AR_hom']:
+                        model = 'AR_hom'
+                    elif model in ['AR_denovo', 'AR_hom_denovo']:
+                        model = 'AR_hom_denovo'
+                    elif model in ['NA', 'Na']:
+                        model = 'NA'
+                    elif model not in ['AD' , 'AD_denovo', 'X', 'X_denovo', 'AR_compound', 'NA', 'Na']:
+                        print('Incorrect model name: %s' % model)
+                        print('Legal models: AD , AD_denovo, X, X_denovo, AR_hom, AR_hom_denovo, AR_compound, NA')
+                        raise SyntaxError('Unknown genetic model specified:\n %s' % individual_line)
+                    correct_model_names.append(model)
+                
+                if correct_model_names != ['NA']:
+                    self.families[fam_id].models_of_inheritance = correct_model_names
         
 
 def main():
