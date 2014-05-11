@@ -56,6 +56,8 @@ class FamilyParser(object):
             #     self.broad_parser(individual_line, line_count)
         for family in self.families:
             self.families[family].family_check()
+            # print(self.families[family].trios)
+            # print(self.families[family].duos)
     
     def ped_parser(self, family_file):
         """Parse a .ped ped file."""
