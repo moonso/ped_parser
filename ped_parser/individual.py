@@ -34,6 +34,8 @@ class Individual(object):
         self.family = family #Family Id STRING
         self.mother = mother #Mother Id STRING
         self.father = father # Father Id STRING
+        self.affected = False
+        self.healthy = False
         try:
             self.sex = int(sex) # Sex Integer
             self.phenotype = int(phenotype) # Phenotype INTEGER 
@@ -57,10 +59,23 @@ class Individual(object):
         self.grandparents = {}
         self.first_cousins = {}
         self.second_cousins = {}
+        
+        if self.affected():
+            self.affected = True
+        elif self.healthy():
+            self.healthy = True
+        
             
     def affected(self):
         """Returns true is affected and false if healthy or unknown(?)"""
         if self.phenotype == 2:
+            return True
+        else:
+            return False
+    
+    def healthy(self):
+        """Returns true is affected and false if healthy or unknown(?)"""
+        if self.phenotype == 1:
             return True
         else:
             return False
