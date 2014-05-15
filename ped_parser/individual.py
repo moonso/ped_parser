@@ -60,26 +60,11 @@ class Individual(object):
         self.first_cousins = {}
         self.second_cousins = {}
         
-        if self.affected():
-            self.affected = True
-        elif self.healthy():
-            self.healthy = True
-        
-            
-    def affected(self):
-        """Returns true is affected and false if healthy or unknown(?)"""
         if self.phenotype == 2:
-            return True
-        else:
-            return False
-    
-    def healthy(self):
-        """Returns true is affected and false if healthy or unknown(?)"""
-        if self.phenotype == 1:
-            return True
-        else:
-            return False
-    
+            self.affected = True
+        elif self.phenotype == 1:
+            self.healthy = True
+            
     def check_grandparents(self, mother = None, father = None):
         """Check if there are any grand parents."""
         if mother:
@@ -99,7 +84,7 @@ class Individual(object):
         if (self.mother == individual.mother) or (self.father == individual.father):
             self.siblings[individual.individual_id] = ''
             individual.siblings[individual_id] = ''
-            return
+        return
         
         # TODO write checks for the other types
     
