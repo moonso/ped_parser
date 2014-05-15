@@ -26,28 +26,28 @@ class TestIndividual(object):
     
     def test_daughter(self):
         """Test if the information about the daughter comes out correctly."""
-        assert self.daughter.affected()
+        assert self.daughter.affected
         assert self.daughter.has_parents
         assert self.daughter.sex == 2
         assert not self.daughter.phasing
     
     def test_father(self):
         """Test if the information about the father comes out correctly."""
-        assert not self.father.affected()
+        assert not self.father.affected
         assert not self.father.has_parents
         assert self.father.sex == 1
         assert not self.father.phasing
     
     def test_mother(self):
         """Test if the information about the mother comes out correctly."""
-        assert not self.mother.affected()
+        assert not self.mother.affected
         assert not self.mother.has_parents
         assert self.mother.sex == 2
         assert not self.father.phasing
     
     def test_random_individual(self):
         """Test if the information about the father comes out correctly."""
-        assert not self.random_individual.affected()
+        assert not self.random_individual.affected
         assert not self.random_individual.has_parents
         assert self.random_individual.sex == 0
         assert not self.random_individual.phasing
