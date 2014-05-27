@@ -121,7 +121,7 @@ class FamilyParser(object):
 
                     ind_obj = self.get_individual(ind, fam_id, mother, father, sex, phenotype)
                     
-                    self.families[fam_id].add_individual(my_individual)
+                    self.families[fam_id].add_individual(ind_obj)
             
     
     def check_cmms_file(self, family_file, family_type):
@@ -145,8 +145,8 @@ class FamilyParser(object):
                 # If cmms type we can check the sample names
                 if family_type == 'cmms':
                     affection_status = ind.split('-')[-1][-1] # This in A (=affected) or U (=unaffected)
-                    phenotype = self.individuals[ind].phenotype
-                    sex = self.individuals[ind].sex
+                    phenotype = self.families[fam_id].individuals[ind].phenotype
+                    sex = self.families[fam_id].individuals[ind].sex
                     if (affection_status == 'A' and phenotype != 2 or 
                         affection_status == 'U' and phenotype != 1):
                         raise SyntaxError('Affection status disagrees with phenotype:\n %s' % individual_line)
@@ -158,13 +158,18 @@ class FamilyParser(object):
                 
                 correct_model_names = []
                 for model in models_of_inheritance:
+                    # We need to allow typos
                     if model in ['AR', 'AR_hom']:
                         model = 'AR_hom'
-                    elif model in ['AR_denovo', 'AR_hom_denovo']:
-                        model = 'AR_hom_denovo'
+                    elif model in ['AR_denovo', 'AR_hom_denovo', 'AR_hom_dn', 'AR_dn']:
+                        model = 'AR_hom_dn'
+                    elif model in ['AD_denovo', 'AD_dn']:
+                        model = 'AD_dn'
+                    elif model in ['AR_compound', 'AR_comp']:
+                        model = 'AR_comp'
                     elif model in ['NA', 'Na']:
                         model = 'NA'
-                    elif model not in ['AD' , 'AD_denovo', 'X', 'X_denovo', 'AR_compound', 'NA', 'Na']:
+                    elif model not in ['AD' , 'XR', 'XR_dn', 'XD', 'XD_dn', 'X']:
                         print('Incorrect model name: %s' % model)
                         print('Legal models: AD , AD_denovo, X, X_denovo, AR_hom, AR_hom_denovo, AR_compound, NA')
                         raise SyntaxError('Unknown genetic model specified:\n %s' % individual_line)
