@@ -50,6 +50,7 @@ class Family(object):
                 self.no_relations = False
                 self.check_parent(father, father=True)
                 self.check_parent(mother, father=False)
+                # Check if there is a trio
                 if self.individuals[individual].has_both_parents:
                     self.trios.append(set([individual, father, mother]))
                 elif father != '0':
@@ -99,7 +100,7 @@ class Family(object):
         phenotype = 0 # This is if unknown phenotype
         for individual in self.individuals:
             if individual == ind_id:
-                phenotype = self.individuals[individual].phenotype
+                return self.individuals[individual].phenotype
         return phenotype
     
     def print_trios(self):

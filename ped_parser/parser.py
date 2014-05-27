@@ -34,6 +34,7 @@ import argparse
 from codecs import open#!/usr/bin/env python
 from string import whitespace
 from ped_parser import individual, family
+from pprint import pprint as pp
 
 class FamilyParser(object):
     """Parses a file with family info and creates a family object with individuals."""
@@ -54,10 +55,19 @@ class FamilyParser(object):
                 self.check_cmms_file(family_file, family_type)
             # elif family_type == 'broad':
             #     self.broad_parser(individual_line, line_count)
-        for family in self.families:
-            self.families[family].family_check()
+        for fam in self.families:
+            self.families[fam].family_check()
             # print(self.families[family].trios)
             # print(self.families[family].duos)
+    
+    def get_individual(self, ind, fam_id, mother, father, sex, phenotype):
+        """Takes the minimum information about an individual and returns a individual object."""
+        #Make shure that these are allways numbers
+        if sex not in ['1', '2']:
+            sex == '0'
+        if phenotype not in ['1', '2']:
+            phenotype == '0'
+        return individual.Individual(ind, fam_id, mother, father, sex, phenotype)
     
     def ped_parser(self, family_file):
         """Parse a .ped ped file."""
@@ -73,7 +83,8 @@ class FamilyParser(object):
                     fam_id = splitted_line[0]
                     
                     if fam_id not in self.families:
-                        self.families[fam_id] = family.Family(fam_id)
+                        # self.families[fam_id] = family.Family(fam_id)
+                        self.families[fam_id] = family.Family(fam_id, {})
                     
                     ind = splitted_line[1]
                     father = splitted_line[2]
@@ -81,15 +92,10 @@ class FamilyParser(object):
                     sex = splitted_line[4]
                     phenotype = splitted_line[5]
                     
-                    #Make shure that these are allways numbers
-                    if sex not in ['1', '2']:
-                        sex == '0'
-                    if phenotype not in ['1', '2']:
-                        phenotype == '0'
-                    my_individual = individual.Individual(ind, fam_id, mother, father, sex, phenotype)
-                    self.individuals[my_individual.individual_id] = my_individual
-                    self.families[my_individual.family].add_individual(my_individual)
-    
+                    ind_obj = self.get_individual(ind, fam_id, mother, father, sex, phenotype)
+                    self.families[fam_id].add_individual(ind_obj)
+                    
+                    
     def alternative_parser(self, family_file):
         """This parses a ped file with more than six columns, in that case header comlumn must exist and each row must have the same amount of columns as the header. First six columns must be the same as in the ped format."""
         
@@ -112,15 +118,10 @@ class FamilyParser(object):
                     mother = line[3]
                     sex = line[4]
                     phenotype = line[5]
+
+                    ind_obj = self.get_individual(ind, fam_id, mother, father, sex, phenotype)
                     
-                    #Make shure that these are allways numbers
-                    if sex not in ['1', '2']:
-                        sex == '0'
-                    if phenotype not in ['1', '2']:
-                        phenotype == '0'
-                    my_individual = individual.Individual(ind, fam_id, mother, father, sex, phenotype)
-                    self.individuals[my_individual.individual_id] = my_individual
-                    self.families[my_individual.family].add_individual(my_individual)
+                    self.families[fam_id].add_individual(ind_obj)
             
     
     def check_cmms_file(self, family_file, family_type):
@@ -144,8 +145,8 @@ class FamilyParser(object):
                 # If cmms type we can check the sample names
                 if family_type == 'cmms':
                     affection_status = ind.split('-')[-1][-1] # This in A (=affected) or U (=unaffected)
-                    phenotype = self.individuals[ind].phenotype
-                    sex = self.individuals[ind].sex
+                    phenotype = self.families[fam_id].individuals[ind].phenotype
+                    sex = self.families[fam_id].individuals[ind].sex
                     if (affection_status == 'A' and phenotype != 2 or 
                         affection_status == 'U' and phenotype != 1):
                         raise SyntaxError('Affection status disagrees with phenotype:\n %s' % individual_line)
@@ -157,13 +158,18 @@ class FamilyParser(object):
                 
                 correct_model_names = []
                 for model in models_of_inheritance:
+                    # We need to allow typos
                     if model in ['AR', 'AR_hom']:
                         model = 'AR_hom'
-                    elif model in ['AR_denovo', 'AR_hom_denovo']:
-                        model = 'AR_hom_denovo'
+                    elif model in ['AR_denovo', 'AR_hom_denovo', 'AR_hom_dn', 'AR_dn']:
+                        model = 'AR_hom_dn'
+                    elif model in ['AD_denovo', 'AD_dn']:
+                        model = 'AD_dn'
+                    elif model in ['AR_compound', 'AR_comp']:
+                        model = 'AR_comp'
                     elif model in ['NA', 'Na']:
                         model = 'NA'
-                    elif model not in ['AD' , 'AD_denovo', 'X', 'X_denovo', 'AR_compound', 'NA', 'Na']:
+                    elif model not in ['AD' , 'XR', 'XR_dn', 'XD', 'XD_dn', 'X']:
                         print('Incorrect model name: %s' % model)
                         print('Legal models: AD , AD_denovo, X, X_denovo, AR_hom, AR_hom_denovo, AR_compound, NA')
                         raise SyntaxError('Unknown genetic model specified:\n %s' % individual_line)
