@@ -45,7 +45,7 @@ class TestIndividual(object):
         family_parser = parser.FamilyParser(self.trio_file.name)
         assert family_parser.header == ['FamilyID', 'SampleID', 'Father', 'Mother', 'Sex', 'Phenotype']
         assert 'healthyParentsAffectedSon' in family_parser.families
-        assert set(['proband', 'mother', 'father']) == set(family_parser.individuals.keys())
+        assert set(['proband', 'mother', 'father']) == set(family_parser.families['healthyParentsAffectedSon'].individuals.keys())
         assert set(['proband', 'mother', 'father']) == set(family_parser.families['healthyParentsAffectedSon'].trios[0])
 
 
