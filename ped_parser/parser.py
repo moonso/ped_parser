@@ -78,7 +78,8 @@ class FamilyParser(object):
                 if len(splitted_line) != 6:
                     splitted_line = line.rstrip().split()
                     if len(splitted_line) != 6:
-                        raise SyntaxError("""One of the ped lines have %s number of entrys: %s""" % (line, len(splitted_line)))
+                        print("""One of the ped lines have %s number of entrys:\n %s""" % (len(splitted_line), line))
+                        raise SyntaxError()
                 if len(splitted_line) > 1:
                     fam_id = splitted_line[0]
                     
@@ -94,8 +95,8 @@ class FamilyParser(object):
                     
                     ind_obj = self.get_individual(ind, fam_id, mother, father, sex, phenotype)
                     self.families[fam_id].add_individual(ind_obj)
-                    
-                    
+    
+
     def alternative_parser(self, family_file):
         """This parses a ped file with more than six columns, in that case header comlumn must exist and each row must have the same amount of columns as the header. First six columns must be the same as in the ped format."""
         
@@ -105,7 +106,8 @@ class FamilyParser(object):
             elif not all(c in whitespace for c in line.rstrip()):
                 line = line.rstrip().split('\t')
                 if len(line) != len(self.header):
-                    raise SyntaxError('Number of entrys differ from header. %s' % line)
+                    print('Number of entrys differ from header. %s' % line)
+                    raise SyntaxError()
                 if len(line) > 1:
                     
                     fam_id = line[0]
@@ -149,10 +151,12 @@ class FamilyParser(object):
                     sex = self.families[fam_id].individuals[ind].sex
                     if (affection_status == 'A' and phenotype != 2 or 
                         affection_status == 'U' and phenotype != 1):
-                        raise SyntaxError('Affection status disagrees with phenotype:\n %s' % individual_line)
+                        print('Affection status disagrees with phenotype:\n %s' % individual_line)
+                        raise SyntaxError()
                     sex_code = int(ind.split('-')[-1][:-1])# Males allways have odd numbers and womans even
                     if (sex_code % 2 == 0 and sex != 2) or (sex_code % 2 != 0 and sex != 1):
-                        raise SyntaxError('Gender code in id disagrees with sex:\n %s' % individual_line)
+                        print('Gender code in id disagrees with sex:\n %s' % individual_line)
+                        raise SyntaxError()
                 
                 models_of_inheritance = info.get('Inheritance_model', ['NA'])
                 
@@ -172,7 +176,8 @@ class FamilyParser(object):
                     elif model not in ['AD' , 'XR', 'XR_dn', 'XD', 'XD_dn', 'X']:
                         print('Incorrect model name: %s' % model)
                         print('Legal models: AD , AD_denovo, X, X_denovo, AR_hom, AR_hom_denovo, AR_compound, NA')
-                        raise SyntaxError('Unknown genetic model specified:\n %s' % individual_line)
+                        print('Unknown genetic model specified:\n %s' % individual_line)
+                        raise SyntaxError()
                     correct_model_names.append(model)
                 
                 if correct_model_names != ['NA']:
