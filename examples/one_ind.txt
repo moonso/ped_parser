@@ -1,0 +1,2 @@
+#FamilyID	SampleID	Father	Mother	Sex	Phenotype	CMMSID	Tissue_origin	Isolation_kit	Isolation_date	Isolation_personnel	Medical_doctor	Inheritance_model	Phenotype_terms	CMMS_seqID	SciLifeID	Capture_kit
+109	109-1-1A	0	0	1	2	11-8280	Fibroblasts	Qiagen midi	110621	AMS	Naess	Na	Na	Klinisk	IEM	Agilent_SureSelect.V5
