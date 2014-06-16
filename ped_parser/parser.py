@@ -31,6 +31,7 @@ Copyright (c) 2013 __MyCompanyName__. All rights reserved.
 import sys
 import os
 import argparse
+import json
 from codecs import open#!/usr/bin/env python
 from string import whitespace
 from ped_parser import individual, family
@@ -79,7 +80,7 @@ class FamilyParser(object):
                     splitted_line = line.rstrip().split()
                     if len(splitted_line) != 6:
                         print("""One of the ped lines have %s number of entrys:\n %s""" % (len(splitted_line), line))
-                        raise SyntaxError()
+                        raise SyntaxError("""One of the lines have the wrong number of entrys!""")
                 if len(splitted_line) > 1:
                     fam_id = splitted_line[0]
                     
@@ -183,6 +184,24 @@ class FamilyParser(object):
                 if correct_model_names != ['NA']:
                     self.families[fam_id].models_of_inheritance = correct_model_names
         
+    def make_json(self):
+        """Return the information from the pedigree file as a json object."""
+        json_families = []
+        for family_id in self.families:
+            family = {'id': str(family_id),
+                        'individuals': [],
+                        }
+            for individual_id in self.families[family_id].individuals:
+                individual = {'id': individual_id,
+                                'sex:': self.families[family_id].individuals[individual_id].sex,
+                                'phenotype': self.families[family_id].individuals[individual_id].phenotype,
+                                'mother': self.families[family_id].individuals[individual_id].mother,
+                                'father': self.families[family_id].individuals[individual_id].father
+                            }
+                family['individuals'].append(individual)
+            json_families.append(family)
+        
+        return json.dumps(json_families)
 
 def main():
     parser = argparse.ArgumentParser(description="Parse different kind of pedigree files.")
@@ -200,6 +219,7 @@ def main():
         print('Individuals: ')
         for individual in my_parser.families[family].individuals:
             print(individual)
+    pp(my_parser.make_json())
     
         
 
