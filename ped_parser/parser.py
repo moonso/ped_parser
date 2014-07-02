@@ -47,11 +47,11 @@ class FamilyParser(object):
         self.header = ['FamilyID', 'SampleID', 'Father', 'Mother', 'Sex', 'Phenotype']
         with open(infile, 'r', encoding='utf-8') as family_file:
             line_count = 0
-            if family_type in ['ped', 'fam']:
+            if self.family_type in ['ped', 'fam']:
                 self.ped_parser(family_file)
-            elif family_type == 'alt':
+            elif self.family_type == 'alt':
                 self.alternative_parser(family_file)
-            elif family_type in ['cmms', 'mip']:
+            elif self.family_type in ['cmms', 'mip']:
                 self.alternative_parser(family_file)
                 self.check_cmms_file(family_file, family_type)
             # elif family_type == 'broad':
@@ -65,9 +65,10 @@ class FamilyParser(object):
         """Takes the minimum information about an individual and returns a individual object."""
         #Make shure that these are allways numbers
         if sex not in ['1', '2']:
-            sex == '0'
+            sex = '0'
         if phenotype not in ['1', '2']:
-            phenotype == '0'
+            phenotype = '0'
+        print(ind, mother, father, sex, phenotype)
         return individual.Individual(ind, fam_id, mother, father, sex, phenotype)
     
     def ped_parser(self, family_file):
