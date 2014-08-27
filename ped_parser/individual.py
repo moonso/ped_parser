@@ -20,6 +20,10 @@ Created by Måns Magnusson on 2012-10-31.
 Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 """
 
+from __future__ import print_function
+from __future__ import unicode_literals
+
+
 import sys
 import os
 
