@@ -28,6 +28,9 @@ Created by Måns Magnusson on 2013-01-17.
 Copyright (c) 2013 __MyCompanyName__. All rights reserved.
 """
 
+from __future__ import print_function
+from __future__ import unicode_literals
+
 import sys
 import os
 import argparse
@@ -68,7 +71,6 @@ class FamilyParser(object):
             sex = '0'
         if phenotype not in ['1', '2']:
             phenotype = '0'
-        print(ind, mother, father, sex, phenotype)
         return individual.Individual(ind, fam_id, mother, father, sex, phenotype)
     
     def ped_parser(self, family_file):
