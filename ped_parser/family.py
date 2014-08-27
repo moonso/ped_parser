@@ -24,6 +24,10 @@ Created by Måns Magnusson on 2014-02-05.
 Copyright (c) 2014 __MyCompanyName__. All rights reserved.
 """
 
+from __future__ import print_function
+from __future__ import unicode_literals
+
+
 import sys
 import os
 
