@@ -164,7 +164,7 @@ class FamilyParser(object):
                 
                 models_of_inheritance = info.get('Inheritance_model', ['NA'])
                 
-                correct_model_names = []
+                correct_model_names = set()
                 for model in models_of_inheritance:
                     # We need to allow typos
                     if model in ['AR', 'AR_hom']:
@@ -175,6 +175,8 @@ class FamilyParser(object):
                         model = 'AD_dn'
                     elif model in ['AR_compound', 'AR_comp']:
                         model = 'AR_comp'
+                    elif model in ['X', 'X_denovo']:
+                        model = 'X'
                     elif model in ['NA', 'Na']:
                         model = 'NA'
                     elif model not in ['AD' , 'XR', 'XR_dn', 'XD', 'XD_dn', 'X']:
@@ -182,7 +184,9 @@ class FamilyParser(object):
                         print('Legal models: AD , AD_denovo, X, X_denovo, AR_hom, AR_hom_denovo, AR_compound, NA')
                         print('Unknown genetic model specified:\n %s' % individual_line)
                         raise SyntaxError()
-                    correct_model_names.append(model)
+                    correct_model_names.add(model)
+                
+                correct_model_names = list(correct_model_names)
                 
                 if correct_model_names != ['NA']:
                     self.families[fam_id].models_of_inheritance = correct_model_names
