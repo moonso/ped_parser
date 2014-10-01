@@ -51,6 +51,7 @@ class FamilyParser(object):
         with open(infile, 'r', encoding='utf-8') as family_file:
             line_count = 0
             if self.family_type in ['ped', 'fam']:
+                print('Ped!')
                 self.ped_parser(family_file)
             elif self.family_type == 'alt':
                 self.alternative_parser(family_file)
@@ -77,16 +78,19 @@ class FamilyParser(object):
         """Parse a .ped ped file."""
         
         for line in family_file:
+            # Check if commented line or empty line:
             if not line.startswith('#') and not all(c in whitespace for c in line.rstrip()):
                 splitted_line = line.rstrip().split('\t')
+                print(splitted_line)
+                print(type(splitted_line), len(splitted_line))
                 if len(splitted_line) != 6:
                     splitted_line = line.rstrip().split()
                     if len(splitted_line) != 6:
                         print("""One of the ped lines have %s number of entrys:\n %s""" % (len(splitted_line), line))
                         raise SyntaxError("""One of the lines have the wrong number of entrys!""")
-                if len(splitted_line) > 1:
+                else:
                     fam_id = splitted_line[0]
-                    
+                    print('HEJ %s' % fam_id)
                     if fam_id not in self.families:
                         # self.families[fam_id] = family.Family(fam_id)
                         self.families[fam_id] = family.Family(fam_id, {})
@@ -98,6 +102,7 @@ class FamilyParser(object):
                     phenotype = splitted_line[5]
                     
                     ind_obj = self.get_individual(ind, fam_id, mother, father, sex, phenotype)
+                    print(ind_obj)
                     self.families[fam_id].add_individual(ind_obj)
     
 
@@ -219,13 +224,16 @@ def main():
     infile = args.pedigree_file[0]
     file_type = args.file_type[0]
     my_parser = FamilyParser(infile, file_type)
-    print('Families:' ,my_parser.families)
+    print('Families: %s' % ','.join(list(my_parser.families.keys())))
     for family in my_parser.families:
         print('Fam %s' % family)
         print('Models: %s' % my_parser.families[family].models_of_inheritance)
         print('Individuals: ')
         for individual in my_parser.families[family].individuals:
-            print(individual)
+            print(my_parser.families[family].individuals[individual])
+        print('Affected individuals: %s' % ','.join(my_parser.families[family].affected_individuals))
+        print('')
+    print('Json ped:')
     pp(my_parser.make_json())
     
         
