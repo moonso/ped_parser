@@ -35,7 +35,7 @@ import sys
 import os
 import argparse
 import json
-from codecs import open#!/usr/bin/env python
+from codecs import open
 from string import whitespace
 from ped_parser import individual, family
 from pprint import pprint as pp
