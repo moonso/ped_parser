@@ -59,10 +59,10 @@ class Individual(object):
         
         # These features will be added
         #TODO make use of family relations:
-        self.siblings = {}
-        self.grandparents = {}
-        self.first_cousins = {}
-        self.second_cousins = {}
+        self.siblings = set()
+        self.grandparents = set()
+        self.first_cousins = set()
+        self.second_cousins = set()
         
         if self.phenotype == 2:
             self.affected = True
@@ -82,20 +82,17 @@ class Individual(object):
             elif father.father != '0':
                 self.grandparents[father.father] = ''
         return
-    
-    def check_relations(self, individual):
-        """Check the relations that this individual have eith another individual."""
-        if (self.mother == individual.mother) or (self.father == individual.father):
-            self.siblings[individual.individual_id] = ''
-            individual.siblings[individual_id] = ''
-        return
         
-        # TODO write checks for the other types
-    
     def __str__(self):
         """Returns what should be printed if object is printed."""
-        ind_info = ['ind:', self.individual_id, 'family:', self.family, 'mother:', self.mother, 'father:', self.father,
-                     'sex:', str(self.sex), 'phenotype:', str(self.phenotype)]
+        ind_info = ['ind:', self.individual_id, 
+                    'family:', self.family, 
+                    'mother:', self.mother, 
+                    'father:', self.father,
+                    'sex:', str(self.sex), 
+                    'phenotype:', str(self.phenotype),
+                    'siblings:', ','.join(self.siblings)
+                    ]
         return ' '.join(ind_info)
 
 def main():

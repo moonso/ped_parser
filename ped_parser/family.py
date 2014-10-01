@@ -41,13 +41,18 @@ class Family(object):
         self.trios = [] #Trios are a list of sets with trios.
         self.duos = [] #Duos are a list of sets with trios.
         self.no_relations = True
+        self.affected_individuals = set() # Set of affected individual id:s
     
     def family_check(self):
         """Check if the family members break the structure of the family in any way, eg. nonexistent parent, 
             wrong sex on parent... Also extracts all trios found, this i of help for many at the moment since 
-            GATK can only do phasing of trios and duos"""
+            GATK can only do phasing of trios and duos."""
         #TODO Make some tests for these
         for individual in self.individuals:
+            
+            if self.individuals[individual].affected:
+                self.affected_individuals.add(individual)
+            
             father = self.individuals[individual].father
             mother = self.individuals[individual].mother
             if self.individuals[individual].has_parents:
@@ -61,14 +66,24 @@ class Family(object):
                     self.duos.append(set([individual, father]))
                 else:
                     self.duos.append(set([individual, mother]))
+                # self.check_grandparents(individual)
             # Annotate siblings:
             for individual_2 in self.individuals:
                 if individual != individual_2:
                     if self.check_siblings(individual, individual_2):
-                        self.individuals[individual].siblings[individual_2] = self.individuals[individual_2]
+                        self.individuals[individual].siblings.add(individual_2)
     
     def check_parent(self, parent_id, father = False):
-        """Check if the parent info is correct. If an individual is not present in file raise exeption."""
+        """Check if the parent info is correct. If an individual is not present in file raise exeption.
+            
+            Input: An id that represents a parent
+                   father = True/False
+            
+            Raises SyntaxError if
+                    The parent id is not present
+                    The gender of the parent is wrong.
+        """
+        
         if parent_id != '0':
             if parent_id not in self.individuals:
                 raise SyntaxError('Parent %s is not in family.' % parent_id)
@@ -81,7 +96,14 @@ class Family(object):
         return
     
     def check_siblings(self, individual_1, individual_2):
-        """Check if two family members that are siblings."""
+        """Check if two family members that are siblings.
+            
+            Input: Two individual id:s (individual_1, individual_2)
+            
+            Returns: True if the individuals are related
+                     False if they are not related
+        """
+        
         if ((self.individuals[individual_1].father != '0' and 
                 self.individuals[individual_1].father == self.individuals[individual_2].father) or 
             (self.individuals[individual_2].mother != '0' and 
@@ -91,20 +113,33 @@ class Family(object):
             return False
     
     def check_cousins(self, individual_1, individual_2):
-        """Check which family members that are cousins"""
+        """Check which family members that are cousins. 
+            If two individuals share any grandparents they are cousins.
+            
+            Input: Two individuals
+            
+            Returns: True if they share any grandparents
+                     False if not.
+        """
         #TODO check if any of the parents are siblings
         pass
     
     def add_individual(self, individual_object):
-        """Add an individual to the family."""
+        """Add an individual to the family.
+            
+            Input: An individual object
+                
+                Adds the individual object to the family.
+        """
+        
         self.individuals[individual_object.individual_id] = individual_object
+        return
     
-    def get_phenotype(self, ind_id):
+    def get_phenotype(self, individual_id):
         """Return the phenotype of an individual or 0 if nonexisting individual."""
         phenotype = 0 # This is if unknown phenotype
-        for individual in self.individuals:
-            if individual == ind_id:
-                return self.individuals[individual].phenotype
+        if individual_id in self.individuals:
+            phenotype = self.individuals[individual].phenotype
         return phenotype
     
     def print_trios(self):
