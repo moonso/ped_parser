@@ -7,7 +7,7 @@ except ImportError:
 long_description = 'A pedigree parser.'
 
 setup(name="ped_parser",
-	version="0.7",
+	version="0.7.1",
 	author="Mans Magnusson",
 	author_email="mans.magnusson@scilifelab.se",
     license='MIT License',
