@@ -51,7 +51,6 @@ class FamilyParser(object):
         with open(infile, 'r', encoding='utf-8') as family_file:
             line_count = 0
             if self.family_type in ['ped', 'fam']:
-                print('Ped!')
                 self.ped_parser(family_file)
             elif self.family_type == 'alt':
                 self.alternative_parser(family_file)
@@ -81,8 +80,6 @@ class FamilyParser(object):
             # Check if commented line or empty line:
             if not line.startswith('#') and not all(c in whitespace for c in line.rstrip()):
                 splitted_line = line.rstrip().split('\t')
-                print(splitted_line)
-                print(type(splitted_line), len(splitted_line))
                 if len(splitted_line) != 6:
                     splitted_line = line.rstrip().split()
                     if len(splitted_line) != 6:
@@ -90,7 +87,6 @@ class FamilyParser(object):
                         raise SyntaxError("""One of the lines have the wrong number of entrys!""")
                 else:
                     fam_id = splitted_line[0]
-                    print('HEJ %s' % fam_id)
                     if fam_id not in self.families:
                         # self.families[fam_id] = family.Family(fam_id)
                         self.families[fam_id] = family.Family(fam_id, {})
@@ -102,7 +98,6 @@ class FamilyParser(object):
                     phenotype = splitted_line[5]
                     
                     ind_obj = self.get_individual(ind, fam_id, mother, father, sex, phenotype)
-                    print(ind_obj)
                     self.families[fam_id].add_individual(ind_obj)
     
 
