@@ -139,7 +139,7 @@ class Family(object):
         """Return the phenotype of an individual or 0 if nonexisting individual."""
         phenotype = 0 # This is if unknown phenotype
         if individual_id in self.individuals:
-            phenotype = self.individuals[individual].phenotype
+            phenotype = self.individuals[individual_id].phenotype
         return phenotype
     
     def print_trios(self):
