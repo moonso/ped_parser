@@ -85,20 +85,19 @@ class FamilyParser(object):
                     if len(splitted_line) != 6:
                         print("""One of the ped lines have %s number of entrys:\n %s""" % (len(splitted_line), line))
                         raise SyntaxError("""One of the lines have the wrong number of entrys!""")
-                else:
-                    fam_id = splitted_line[0]
-                    if fam_id not in self.families:
-                        # self.families[fam_id] = family.Family(fam_id)
-                        self.families[fam_id] = family.Family(fam_id, {})
-                    
-                    ind = splitted_line[1]
-                    father = splitted_line[2]
-                    mother = splitted_line[3]
-                    sex = splitted_line[4]
-                    phenotype = splitted_line[5]
-                    
-                    ind_obj = self.get_individual(ind, fam_id, mother, father, sex, phenotype)
-                    self.families[fam_id].add_individual(ind_obj)
+                fam_id = splitted_line[0]
+                if fam_id not in self.families:
+                    # self.families[fam_id] = family.Family(fam_id)
+                    self.families[fam_id] = family.Family(fam_id, {})
+                
+                ind = splitted_line[1]
+                father = splitted_line[2]
+                mother = splitted_line[3]
+                sex = splitted_line[4]
+                phenotype = splitted_line[5]
+                
+                ind_obj = self.get_individual(ind, fam_id, mother, father, sex, phenotype)
+                self.families[fam_id].add_individual(ind_obj)
     
 
     def alternative_parser(self, family_file):
