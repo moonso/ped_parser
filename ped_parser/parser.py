@@ -236,7 +236,7 @@ def main():
         print('Affected individuals: %s' % ','.join(my_parser.families[family].affected_individuals))
         print('')
     print('Json ped:')
-    pp(my_parser.make_json())
+    pp(my_parser.get_json())
     
         
 
