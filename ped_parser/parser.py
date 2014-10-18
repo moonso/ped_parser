@@ -34,7 +34,6 @@ from __future__ import unicode_literals
 import sys
 import os
 import argparse
-import json
 from codecs import open
 from string import whitespace
 from ped_parser import individual, family
@@ -190,8 +189,17 @@ class FamilyParser(object):
                 if correct_model_names != ['NA']:
                     self.families[fam_id].models_of_inheritance = correct_model_names
         
-    def make_json(self):
-        """Return the information from the pedigree file as a json object."""
+    def get_json(self):
+        """Return the information from the pedigree file as a json like object.
+            This will be a list with dictionaries for each family as:
+            [{'id': family_id, individuals: 
+                [{'id':individual_id, 'sex':gender_code, 'phenotype': phenotype_code, 
+                    'mother': mother_id, father: father_id}, ...]}]
+            This object can easily be converted to a json object.
+            
+            Yields:
+                dict: family information described above
+        """
         json_families = []
         for family_id in self.families:
             family = {'id': str(family_id),
@@ -207,7 +215,7 @@ class FamilyParser(object):
                 family['individuals'].append(individual)
             json_families.append(family)
         
-        return json.dumps(json_families)
+        return json_families
 
 def main():
     parser = argparse.ArgumentParser(description="Parse different kind of pedigree files.")
