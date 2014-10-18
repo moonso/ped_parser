@@ -50,3 +50,10 @@ ped\_parser does also support modified .ped files (some users want to store extr
 In this case use:
 
     In [1]: my_parser = parser.FamilyParser('my_family.ped', 'alt')
+
+
+##Methods##
+
+	my_parser.get_json()
+
+returns the families in a list of dictionaries that can be made to json object.
