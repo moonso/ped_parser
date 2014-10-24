@@ -56,4 +56,36 @@ In this case use:
 
 	my_parser.get_json()
 
-returns the families in a list of dictionaries that can be made to json object.
+returns the families in a list of dictionaries that can be made to json object. Looks like:
+
+````
+[
+	{'family_id': '1',
+  	 'individuals': [
+		 		{'father': '0',
+                   'individual_id': 'mother',
+                   'mother': '0',
+                   'phenotype': 1,
+                   'sex:': 2
+			   	},
+                  {'father': 'father',
+                   'individual_id': 'daughter',
+                   'mother': 'mother',
+                   'phenotype': 2,
+                   'sex:': 1
+			    },
+                  {'father': '0',
+                   'individual_id': 'father',
+                   'mother': '0',
+                   'phenotype': 1,
+                   'sex:': 1
+			    },
+                  {'father': 'father',
+                   'individual_id': 'proband',
+                   'mother': 'mother',
+                   'phenotype': 2,
+                   'sex:': 1
+			   }
+			  ]
+ 	}
+]```
