@@ -202,11 +202,11 @@ class FamilyParser(object):
         """
         json_families = []
         for family_id in self.families:
-            family = {'id': str(family_id),
+            family = {'family_id': str(family_id),
                         'individuals': [],
                         }
             for individual_id in self.families[family_id].individuals:
-                individual = {'id': individual_id,
+                individual = {'individual_id': individual_id,
                                 'sex:': self.families[family_id].individuals[individual_id].sex,
                                 'phenotype': self.families[family_id].individuals[individual_id].phenotype,
                                 'mother': self.families[family_id].individuals[individual_id].mother,
