@@ -40,6 +40,8 @@ class Individual(object):
         self.father = father # Father Id STRING
         self.affected = False
         self.healthy = False
+        self.extra_info = {}
+        
         try:
             self.sex = int(sex) # Sex Integer
             self.phenotype = int(phenotype) # Phenotype INTEGER 
