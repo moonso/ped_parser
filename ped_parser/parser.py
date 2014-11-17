@@ -124,8 +124,11 @@ class FamilyParser(object):
                     phenotype = line[5]
 
                     ind_obj = self.get_individual(ind, fam_id, mother, father, sex, phenotype)
+                    for i in range(6, len(line)):
+                        ind_obj.extra_info[self.header[i]] = line[i]
                     
                     self.families[fam_id].add_individual(ind_obj)
+                    
             
     
     def check_cmms_file(self, family_file, family_type):
@@ -212,6 +215,8 @@ class FamilyParser(object):
                                 'mother': self.families[family_id].individuals[individual_id].mother,
                                 'father': self.families[family_id].individuals[individual_id].father
                             }
+                if len(self.families[family_id].individuals[individual_id].extra_info) > 0:
+                    individual['extra_info'] = self.families[family_id].individuals[individual_id].extra_info
                 family['individuals'].append(individual)
             json_families.append(family)
         
