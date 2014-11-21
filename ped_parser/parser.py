@@ -104,7 +104,7 @@ class FamilyParser(object):
         
         for line in family_file:
             if line.startswith('#'):
-                self.header = line[1:].split('\t')
+                self.header = line[1:].rstrip().split('\t')
             elif not all(c in whitespace for c in line.rstrip()):
                 line = line.rstrip().split('\t')
                 if len(line) != len(self.header):
