@@ -210,7 +210,7 @@ class FamilyParser(object):
                         }
             for individual_id in self.families[family_id].individuals:
                 individual = {'individual_id': individual_id,
-                                'sex:': self.families[family_id].individuals[individual_id].sex,
+                                'sex': self.families[family_id].individuals[individual_id].sex,
                                 'phenotype': self.families[family_id].individuals[individual_id].phenotype,
                                 'mother': self.families[family_id].individuals[individual_id].mother,
                                 'father': self.families[family_id].individuals[individual_id].father
