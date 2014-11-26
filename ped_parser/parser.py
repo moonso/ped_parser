@@ -96,6 +96,7 @@ class FamilyParser(object):
                 phenotype = splitted_line[5]
                 
                 ind_obj = self.get_individual(ind, fam_id, mother, father, sex, phenotype)
+                self.individuals[ind] = ind_obj
                 self.families[fam_id].add_individual(ind_obj)
     
 
@@ -127,6 +128,7 @@ class FamilyParser(object):
                     for i in range(6, len(line)):
                         ind_obj.extra_info[self.header[i]] = line[i]
                     
+                    self.individuals[ind] = ind_obj
                     self.families[fam_id].add_individual(ind_obj)
                     
             
@@ -242,6 +244,7 @@ def main():
         print('')
     print('Json ped:')
     pp(my_parser.get_json())
+    pp(my_parser.individuals)
     
         
 
