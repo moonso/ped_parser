@@ -30,7 +30,8 @@ import os
 
 class Individual(object):
     """docstring for Individual"""
-    def __init__(self, ind, family='0', mother='0', father='0',sex='0',phenotype='0',phasing=False):
+    def __init__(self, ind, family='0', mother='0', father='0',sex='0',phenotype='0',
+        genetic_models=None, proband='.', consultand='.', alive='.'):
         
         #TODO write test to throw exceptions if malformed input.
         
@@ -38,9 +39,15 @@ class Individual(object):
         self.family = family #Family Id STRING
         self.mother = mother #Mother Id STRING
         self.father = father # Father Id STRING
+        
         self.affected = False
         self.healthy = False
         self.extra_info = {}
+        
+        # For madeline:
+        self.proband = proband
+        self.consultand = consultand
+        self.alive = alive
         
         try:
             self.sex = int(sex) # Sex Integer
@@ -48,7 +55,6 @@ class Individual(object):
         except ValueError:
             raise SyntaxError('Sex and phenotype have to be integers.')
             
-        self.phasing = phasing # If we have phasing info for this individual BOOL
         self.has_parents = False
         self.has_both_parents = False
         
@@ -87,14 +93,17 @@ class Individual(object):
         
     def __str__(self):
         """Returns what should be printed if object is printed."""
-        ind_info = ['ind:', self.individual_id, 
+        ind_info = ['ind_id:', self.individual_id, 
                     'family:', self.family, 
                     'mother:', self.mother, 
                     'father:', self.father,
                     'sex:', str(self.sex), 
                     'phenotype:', str(self.phenotype),
-                    'siblings:', ','.join(self.siblings)
                     ]
+        if len(self.siblings) > 0:
+            ind_info.append('siblings:')
+            ind_info.append(','.join(self.siblings))
+        
         return ' '.join(ind_info)
 
 def main():
