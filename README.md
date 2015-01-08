@@ -30,7 +30,7 @@ The following column names will be treated with care, which means that they will
 
 Choices are
 
-```['AR','AR_hom','AR_denovo','AR_hom_denovo','AR_hom_dn','AR_dn','AR_compound','AR_comp','AD','AD_dn','AD_denovo','X','X_dn','X_denovo','NA','Na','na','.']```
+['AR','AR_hom','AR_denovo','AR_hom_denovo','AR_hom_dn','AR_dn','AR_compound','AR_comp','AD','AD_dn','AD_denovo','X','X_dn','X_denovo','NA','Na','na','.']
 
 ```Proband``` - 'Yes', 'No', 'Unknown' or '.'.  A proband is the first affected member of a pedigree coming to medical attention.
 ```Consultand``` - 'Yes', 'No', 'Unknown' or '.'. A consultand is an individual who has sought genetic counseling or testing.
