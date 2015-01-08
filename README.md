@@ -9,7 +9,7 @@ The tool can be used to access information from ped files or convert the data to
 
 
 Parse a file with family info, this can be a .ped file, a .fam, a .txt(alternative ped style) 
-file or a .txt(Broad style) file or another ped based alternative.
+file or another ped based alternative.
 
 .ped and .fam always have 6 columns, these are
 
@@ -24,9 +24,9 @@ The other types must specify the columns in the header.
 Header always start with '#'.
 These files always start with the ped columns described above.
 
-The following column names will be treated with care, which means that they will be used when outputting a madeline type of file or makes accesable variables in the parser:
+The following column names will be treated with care, which means that they will be used when outputting a madeline type of file or makes accesable variables in the parser.
 
-```InheritanceModel``` - a ';'-separated list of expected inheritance models. 
+```InheritanceModel``` - a ';'-separated list of expected inheritance models.
 Choices are: 
 ```['AR','AR_hom','AR_denovo','AR_hom_denovo','AR_hom_dn','AR_dn','AR_compound','AR_comp','AD','AD_dn','AD_denovo','X','X_dn','X_denovo','NA','Na','na','.']```
 
