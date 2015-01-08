@@ -15,10 +15,12 @@ from __future__ import unicode_literals
 import sys
 import os
 import click
+import json
 
 from pprint import pprint as pp
+from datetime import datetime
 
-from codecs import getwriter
+from codecs import getwriter, open
 
 import pkg_resources
 import ped_parser
@@ -85,17 +87,28 @@ def ped_parser(family_file, family_type, outfile, to_json, to_madeline, verbose)
         Default is to prints the family file to in ped format to output. 
         For more information, please see github.com/moonso/ped_parser.
     """
-    from datetime import datetime
     my_parser = parser.FamilyParser(infile = family_file, family_type=family_type)
     start = datetime.now()
     if verbose:
         print('Families found in file: %s' % ','.join(list(my_parser.families.keys())), file=sys.stderr)
     
     if to_json:
-        pp(my_parser.to_json())
+        json_output = my_parser.to_json()
+        if outfile:
+            with open(outfile, 'w', encoding='utf-8') as f:
+                f.write(json.dumps(json_output))
+        else:
+            print(json.dumps(json_output))
     elif to_madeline:
-        print('\n'.join(my_parser.to_madeline()))
+        madeline_output = my_parser.to_madeline()
+        if outfile:
+            with open(outfile, 'w', encoding='utf-8') as f:
+                for line in madeline_output:
+                    f.write(line+'\n')
+        else:
+            print('\n'.join(madeline_output))
     else:
+        # If no specific output is choosen, write a summary about the families to screen
         for family in my_parser.families:
             if verbose:
                 print('Fam: %s' % family, file=sys.stderr)
