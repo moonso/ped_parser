@@ -27,7 +27,9 @@ These files always start with the ped columns described above.
 The following column names will be treated with care, which means that they will be used when outputting a madeline type of file or makes accesable variables in the parser.
 
 ```InheritanceModel``` - a ';'-separated list of expected inheritance models.
-Choices are: 
+
+Choices are 
+
 ```['AR','AR_hom','AR_denovo','AR_hom_denovo','AR_hom_dn','AR_dn','AR_compound','AR_comp','AD','AD_dn','AD_denovo','X','X_dn','X_denovo','NA','Na','na','.']```
 
 ```Proband``` - 'Yes', 'No', 'Unknown' or '.'.  A proband is the first affected member of a pedigree coming to medical attention.
