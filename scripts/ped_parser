@@ -1,0 +1,126 @@
+#!/usr/bin/env python
+# encoding: utf-8
+"""
+ped_parser
+
+Command Line Interface for ped_parser
+
+Created by Måns Magnusson on 2014-12-22.
+Copyright (c) 2014 __MoonsoInc__. All rights reserved.
+"""
+
+from __future__ import print_function
+from __future__ import unicode_literals
+
+import sys
+import os
+import click
+import json
+
+from pprint import pprint as pp
+from datetime import datetime
+
+from codecs import getwriter, open
+
+import pkg_resources
+import ped_parser
+from ped_parser import parser
+
+if sys.version_info < (3,0):
+    sys.stdout = getwriter('UTF-8')(sys.stdout)
+
+version = pkg_resources.require("ped_parser")[0].version
+
+
+def print_version(ctx, param, value):
+    """Callback function for printing version and exiting
+    Args:
+        ctx (object) : Current context
+        param (object) : Click parameter(s)
+        value (boolean) : Click parameter was supplied or not
+    Returns:
+        None:
+    """
+    if not value or ctx.resilient_parsing:
+        return
+    click.echo('ped_parser version: ' + version)
+    ctx.exit()
+
+
+###         This is the main script         ###
+
+@click.command()
+@click.argument('family_file', 
+                    nargs=1, 
+                    type=click.Path(),
+                    metavar='<family_file>'
+)
+@click.option('-t', '--family_type',
+                    type=click.Choice(['ped', 'alt', 'cmms', 'mip']),
+                    default='ped',
+                    help='If the analysis use one of the known setups, please specify which one. Default is ped'
+)
+@click.option('-o', '--outfile', 
+                    type=click.Path(exists=False),
+                    help='Specify the path to a file where results should be stored.'
+)
+@click.option('--to_json', 
+                    is_flag=True,
+                    help='Print the ped file in json format.'
+)
+@click.option('--to_madeline', 
+                    is_flag=True,
+                    help='Print the ped file in madeline format.'
+)
+@click.option('-v', '--verbose', 
+                is_flag=True,
+                help='Increase output verbosity.'
+)
+@click.option('--version',
+                is_flag=True,
+                callback=print_version,
+                expose_value=False,
+                is_eager=True
+)
+def ped_parser(family_file, family_type, outfile, to_json, to_madeline, verbose):
+    """Tool for parsing ped files.\n
+        Default is to prints the family file to in ped format to output. 
+        For more information, please see github.com/moonso/ped_parser.
+    """
+    my_parser = parser.FamilyParser(infile = family_file, family_type=family_type)
+    start = datetime.now()
+    if verbose:
+        print('Families found in file: %s' % ','.join(list(my_parser.families.keys())), file=sys.stderr)
+    
+    if to_json:
+        json_output = my_parser.to_json()
+        if outfile:
+            with open(outfile, 'w', encoding='utf-8') as f:
+                f.write(json.dumps(json_output))
+        else:
+            print(json.dumps(json_output))
+    elif to_madeline:
+        madeline_output = my_parser.to_madeline()
+        if outfile:
+            with open(outfile, 'w', encoding='utf-8') as f:
+                for line in madeline_output:
+                    f.write(line+'\n')
+        else:
+            print('\n'.join(madeline_output))
+    else:
+        # If no specific output is choosen, write a summary about the families to screen
+        for family in my_parser.families:
+            if verbose:
+                print('Fam: %s' % family, file=sys.stderr)
+                if family_type in ['cmms', 'mip']:
+                    print('Expected Inheritance Models: %s' % my_parser.families[family].models_of_inheritance, file=sys.stderr)
+                print('Individuals: ', file=sys.stderr)
+            for individual in my_parser.families[family].individuals:
+                if verbose:
+                    print(my_parser.families[family].individuals[individual], file=sys.stderr)
+            if verbose:
+                print('Affected individuals: %s \n' % ','.join(my_parser.families[family].affected_individuals), file=sys.stderr)
+    
+
+if __name__ == '__main__':
+    ped_parser()

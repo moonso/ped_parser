@@ -1,27 +1,34 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-get_family.py
+parser.py
 
 
 Parse a file with family info, this can be a .ped file, a .fam, a .txt(CMMS style) 
-file or a .txt(Broad style) file.
+file or a .txt(Broad style) file or another ped based alternative.
+
 .ped and .fam always have 6 columns, these are
 
-Family_ID Individual_ID Paternal_ID Maternal_ID 
-Sex(1=male; 2=female; other=unknown) 
-Phenotype(-9 missing, 0 missing, 1 unaffected, 2 affected)
+Family_ID - '.' or '0' for unknown
+Individual_ID - '.' or '0' for unknown
+Paternal_ID - '.' or '0' for unknown
+Maternal_ID - '.' or '0' for unknown
+Sex - '1'=male; '2'=female; ['other', '0', '.']=unknown
+Phenotype - '1'=unaffected, '2'=affected, ['-9', '0', '.']= missing, 
 
-The .txt allways have two columns on the form 
+The other types must specify the columns in the header.
+Header allways start with '#'.
+These files allways start with the ped columns described above.
 
-Individual_ID key=value
+The following column names will be treated with care, which means that they will be used when outputting a madeline type of file or makes accesable variables in the parser:
 
-Where keys can be fid(=Family Id), mom, dad, sex, phenotype
+'InheritanceModel' - a ';'-separated list of expected inheritance models. 
+Choices are: 
+['AR','AR_hom','AR_denovo','AR_hom_denovo','AR_hom_dn','AR_dn','AR_compound','AR_comp','AD','AD_dn','AD_denovo','X','X_dn','X_denovo','NA','Na','na','.']
 
-
-If a pedigree file includes information about several families this must be taken care
- of by the parser by creating several family objects and then add information about the
-  familymembers to theese familys. 
+'Proband' - 'Yes', 'No', 'Unknown' or '.'.  A proband is the first affected member of a pedigree coming to medical attention.
+'Consultand' - 'Yes', 'No', 'Unknown' or '.'. A consultand is an individual who has sought genetic counseling or testing.
+'Alive' - 'Yes', 'No', 'Unknown' or '.'
 
 Create a family object and its family members from different types of input file
 Created by Måns Magnusson on 2013-01-17.
@@ -39,6 +46,8 @@ from string import whitespace
 from ped_parser import individual, family
 from pprint import pprint as pp
 
+import click
+
 class FamilyParser(object):
     """Parses a file with family info and creates a family object with individuals."""
     def __init__(self, infile, family_type = 'ped'):
@@ -46,7 +55,13 @@ class FamilyParser(object):
         self.family_type = family_type
         self.families = {}
         self.individuals = {}
-        self.header = ['FamilyID', 'SampleID', 'Father', 'Mother', 'Sex', 'Phenotype']
+        self.legal_ar_hom_names = ['AR', 'AR_hom']
+        self.legal_ar_hom_dn_names = ['AR_denovo', 'AR_hom_denovo', 'AR_hom_dn', 'AR_dn']
+        self.legal_compound_names = ['AR_compound', 'AR_comp']
+        self.legal_ad_names = ['AD', 'AD_dn', 'AD_denovo']
+        self.legal_x_names = ['X', 'X_dn', 'X_denovo']
+        self.legal_na_names = ['NA', 'Na', 'na', '.']
+        self.header = ['family_id', 'sample_id', 'father_id', 'mother_id', 'sex', 'phenotype']
         with open(infile, 'r', encoding='utf-8') as family_file:
             line_count = 0
             if self.family_type in ['ped', 'fam']:
@@ -63,14 +78,51 @@ class FamilyParser(object):
             # print(self.families[family].trios)
             # print(self.families[family].duos)
     
-    def get_individual(self, ind, fam_id, mother, father, sex, phenotype):
-        """Takes the minimum information about an individual and returns a individual object."""
-        #Make shure that these are allways numbers
+    def get_individual(self, family_id, sample_id, father_id, mother_id, sex, phenotype,
+            genetic_models = None, proband='.', consultand='.', alive='.'):
+        """Return a individual object based on the indata."""
         if sex not in ['1', '2']:
             sex = '0'
         if phenotype not in ['1', '2']:
             phenotype = '0'
-        return individual.Individual(ind, fam_id, mother, father, sex, phenotype)
+        if mother_id == '.':
+            mother_id = '0'
+        if father_id == '.':
+            father_id = '0'
+        if genetic_models:
+            genetic_models = genetic_models.split(';')
+        
+        if proband == 'Yes':
+            proband = 'Y'
+        elif proband == 'No':
+            proband = 'N'
+        else:
+            proband = '.'
+        
+        if consultand == 'Yes':
+            consultand = 'Y'
+        elif consultand == 'No':
+            consultand = 'N'
+        else:
+            consultand = '.'
+        
+        if alive == 'Yes':
+            alive = 'Y'
+        elif alive == 'No':
+            alive = 'N'
+        else:
+            alive = '.'
+        
+        individual_obj = individual.Individual(sample_id, family_id, mother_id, father_id, sex, phenotype,
+                        genetic_models, proband, consultand, alive)
+        
+        return individual_obj
+    
+    def check_line_length(self, splitted_line, expected_length):
+        """Check if the line is correctly formated. Throw a SyntaxError if it is not."""
+        if len(splitted_line) != expected_length:
+            raise SyntaxError('\nWRONG FORMATED PED LINE!\n')
+        return
     
     def ped_parser(self, family_file):
         """Parse a .ped ped file."""
@@ -80,58 +132,79 @@ class FamilyParser(object):
             if not line.startswith('#') and not all(c in whitespace for c in line.rstrip()):
                 splitted_line = line.rstrip().split('\t')
                 if len(splitted_line) != 6:
+                    # Try to split the line on another symbol:
                     splitted_line = line.rstrip().split()
-                    if len(splitted_line) != 6:
-                        print("""One of the ped lines have %s number of entrys:\n %s""" % (len(splitted_line), line))
-                        raise SyntaxError("""One of the lines have the wrong number of entrys!""")
-                fam_id = splitted_line[0]
-                if fam_id not in self.families:
-                    # self.families[fam_id] = family.Family(fam_id)
-                    self.families[fam_id] = family.Family(fam_id, {})
+                try:
+                    self.check_line_length(splitted_line, 6)
+                except SyntaxError as e:
+                    print(e)
+                    print("""One of the ped lines have %s number of entrys:\n%s""" % (len(splitted_line), line), file=sys.stderr)
+                    print("Ped lines can only have 6 entrys. "
+                            "Use flag '--family_type/-f' if you are using an alternative ped file.", file=sys.stderr)
+                    sys.exit(1)
                 
-                ind = splitted_line[1]
-                father = splitted_line[2]
-                mother = splitted_line[3]
-                sex = splitted_line[4]
-                phenotype = splitted_line[5]
+                sample_dict = dict(zip(self.header, splitted_line))
                 
-                ind_obj = self.get_individual(ind, fam_id, mother, father, sex, phenotype)
-                self.individuals[ind] = ind_obj
-                self.families[fam_id].add_individual(ind_obj)
-    
+                if sample_dict['family_id'] not in self.families:
+                    self.families[sample_dict['family_id']] = family.Family(sample_dict['family_id'], {})
+                
+                ind_object = self.get_individual(**sample_dict)
+                self.individuals[ind_object.individual_id] = ind_object
+                self.families[ind_object.family].add_individual(ind_object)
+        
 
     def alternative_parser(self, family_file):
         """This parses a ped file with more than six columns, in that case header comlumn must exist and each row must have the same amount of columns as the header. First six columns must be the same as in the ped format."""
         
+        alternative_header = None
         for line in family_file:
             if line.startswith('#'):
-                self.header = line[1:].rstrip().split('\t')
+                alternative_header = line[1:].rstrip().split('\t')
             elif not all(c in whitespace for c in line.rstrip()):
-                line = line.rstrip().split('\t')
-                if len(line) != len(self.header):
-                    print('Number of entrys differ from header. %s' % line)
-                    raise SyntaxError()
+                if not alternative_header:
+                    print('Alternative ped files must have headers!')
+                    print('Please add a header line.')
+                    print('Exiting...')
+                    sys.exit(1)
+                splitted_line = line.rstrip().split('\t')
+                if len(splitted_line) < 6:
+                    # Try to split the line on another symbol:
+                    splitted_line = line.rstrip().split()
+                try:
+                    self.check_line_length(splitted_line, len(alternative_header))
+                except SyntaxError as e:
+                    print(e)
+                    print('Number of entrys differ from header.', file=sys.stderr)
+                    print('Header:\n%s' % '\t'.join(alternative_header), file=sys.stderr)
+                    print('Length of Header: %s' % len(alternative_header), file=sys.stderr)
+                    print('Ped Line:\n%s' % '\t'.join(splitted_line), file=sys.stderr)
+                    print('Length of Ped line: %s' % len(splitted_line), file=sys.stderr)
+                    sys.exit(1)
                 if len(line) > 1:
                     
-                    fam_id = line[0]
+                    sample_dict = dict(zip(self.header, splitted_line[:6]))
                     
-                    if fam_id not in self.families:
-                        self.families[fam_id] = family.Family(fam_id)
+                    all_info = dict(zip(alternative_header, splitted_line))
                     
-                    ind = line[1]
-                    father = line[2]
-                    mother = line[3]
-                    sex = line[4]
-                    phenotype = line[5]
-
-                    ind_obj = self.get_individual(ind, fam_id, mother, father, sex, phenotype)
-                    for i in range(6, len(line)):
-                        ind_obj.extra_info[self.header[i]] = line[i]
+                    if sample_dict['family_id'] not in self.families:
+                        self.families[sample_dict['family_id']] = family.Family(sample_dict['family_id'], {})
                     
-                    self.individuals[ind] = ind_obj
-                    self.families[fam_id].add_individual(ind_obj)
+                    sample_dict['genetic_models'] = all_info.get('InheritanceModel', None)
                     
-            
+                    sample_dict['proband'] = all_info.get('Proband', '.')
+                    sample_dict['consultand'] = all_info.get('Consultand', '.')
+                    sample_dict['alive'] = all_info.get('Alive', '.')
+                    
+                    
+                    ind_object = self.get_individual(**sample_dict)
+                    
+                    self.individuals[ind_object.individual_id] = ind_object
+                    self.families[ind_object.family].add_individual(ind_object)
+                    
+                    
+                    for i in range(6, len(splitted_line)):
+                        ind_object.extra_info[alternative_header[i]] = splitted_line[i]
+        
     
     def check_cmms_file(self, family_file, family_type):
         """Parse a .ped ped file."""
@@ -158,35 +231,42 @@ class FamilyParser(object):
                     sex = self.families[fam_id].individuals[ind].sex
                     if (affection_status == 'A' and phenotype != 2 or 
                         affection_status == 'U' and phenotype != 1):
-                        print('Affection status disagrees with phenotype:\n %s' % individual_line)
-                        raise SyntaxError()
+                        print('Affection status disagrees with phenotype:\n %s' % individual_line, file=sys.stderr)
+                        print('Exiting ...', file=sys.stderr)
+                        sys.exit(1)
                     sex_code = int(ind.split('-')[-1][:-1])# Males allways have odd numbers and womans even
                     if (sex_code % 2 == 0 and sex != 2) or (sex_code % 2 != 0 and sex != 1):
-                        print('Gender code in id disagrees with sex:\n %s' % individual_line)
-                        raise SyntaxError()
+                        print('Gender code in id disagrees with sex:\n %s' % individual_line, file=sys.stderr)
+                        print('Exiting ...', file=sys.stderr)
+                        sys.exit(1)
                 
                 models_of_inheritance = info.get('Inheritance_model', ['NA'])
                 
                 correct_model_names = set()
                 for model in models_of_inheritance:
                     # We need to allow typos
-                    if model in ['AR', 'AR_hom']:
+                    if model in self.legal_ar_hom_names:
                         model = 'AR_hom'
-                    elif model in ['AR_denovo', 'AR_hom_denovo', 'AR_hom_dn', 'AR_dn']:
+                    elif model in self.legal_ar_hom_dn_names:
                         model = 'AR_hom_dn'
-                    elif model in ['AD_denovo', 'AD_dn']:
+                    elif model in self.legal_ad_names:
                         model = 'AD_dn'
-                    elif model in ['AR_compound', 'AR_comp']:
+                    elif model in self.legal_compound_names:
                         model = 'AR_comp'
-                    elif model in ['X', 'X_denovo']:
+                    elif model in self.legal_x_names:
                         model = 'X'
-                    elif model in ['NA', 'Na']:
+                    elif model in self.legal_na_names:
                         model = 'NA'
-                    elif model not in ['AD' , 'XR', 'XR_dn', 'XD', 'XD_dn', 'X']:
-                        print('Incorrect model name: %s' % model)
-                        print('Legal models: AD , AD_denovo, X, X_denovo, AR_hom, AR_hom_denovo, AR_compound, NA')
-                        print('Unknown genetic model specified:\n %s' % individual_line)
-                        raise SyntaxError()
+                    else:
+                        print('Incorrect model name: %s' % model, file=sys.stderr)
+                        print('Legal models: %s' % ','.join(self.legal_ar_hom_names+
+                                                            self.legal_ar_hom_dn_names+
+                                                            self.legal_ad_names+
+                                                            self.legal_compound_names+
+                                                            self.legal_x_names+
+                                                            self.legal_na_names), file=sys.stderr)
+                        print('Exiting..')
+                        sys.exit(1)
                     correct_model_names.add(model)
                 
                 correct_model_names = list(correct_model_names)
@@ -194,7 +274,7 @@ class FamilyParser(object):
                 if correct_model_names != ['NA']:
                     self.families[fam_id].models_of_inheritance = correct_model_names
         
-    def get_json(self):
+    def to_json(self):
         """Return the information from the pedigree file as a json like object.
             This will be a list with dictionaries for each family as:
             [{'id': family_id, individuals: 
@@ -223,31 +303,109 @@ class FamilyParser(object):
             json_families.append(family)
         
         return json_families
+    
+    def to_madeline(self, outfile=None):
+        """Produce output in madeline format. If no outfile is given print to screen.
+            In Madeline gender is represented by ['M','m','F','f']. Affected is ['A','a','U','u']"""
+        
+        madeline_families = []
+        madeline_header = [
+            'FamilyID', 
+            'IndividualID', 
+            'Gender', 
+            'Father', 
+            'Mother', 
+            'Affected',
+            'Proband',
+            'Consultand',
+            'Alive']
+        madeline_families.append('\t'.join(madeline_header))
+        for family_id in self.families:
+            for individual_id in self.families[family_id].individuals:
+                #Convert sex to madeleine type
+                sex = self.families[family_id].individuals[individual_id].sex
+                if sex == 1:
+                    madeline_gender = 'M'
+                elif sex == 2:
+                    madeline_gender = 'F'
+                else:
+                    madeline_gender = '.'
+                #Convert father to madeleine type
+                father = self.families[family_id].individuals[individual_id].father
+                if father == '0':
+                    madeline_father = '.'
+                else:
+                    madeline_father = father
+                #Convert mother to madeleine type
+                mother = self.families[family_id].individuals[individual_id].mother
+                if mother == '0':
+                    madeline_mother = '.'
+                else:
+                    madeline_mother = mother
+                #Convert phenotype to madeleine type
+                phenotype = self.families[family_id].individuals[individual_id].phenotype
+                if phenotype == 1:
+                    madeline_phenotype = 'U'
+                elif phenotype == 2:
+                    madeline_phenotype = 'A'
+                else:
+                    madeline_phenotype = '.'
+                
+                madeline_proband = self.families[family_id].individuals[individual_id].proband
+                madeline_consultand = self.families[family_id].individuals[individual_id].consultand
+                madeline_alive = self.families[family_id].individuals[individual_id].alive
+                
+                madeline_families.append('\t'.join(
+                                            [
+                                                family_id, 
+                                                individual_id, 
+                                                madeline_gender,
+                                                madeline_father,
+                                                madeline_mother,
+                                                madeline_phenotype,
+                                                madeline_proband,
+                                                madeline_consultand,
+                                                madeline_alive
+                                            ]
+                                        )
+                                    )
+                                        
+        #     print(family_id, type(family_id))
+        return madeline_families
+    
 
-def main():
-    parser = argparse.ArgumentParser(description="Parse different kind of pedigree files.")
-    parser.add_argument('pedigree_file', type=str, nargs=1 , help='A file with pedigree information.')
-    parser.add_argument('-type', '--file_type', type=str, nargs=1, choices=['cmms', 'ped', 'fam', 'mip', 'alt'], 
-                        default=['ped'] , help='Pedigree file is in ped format.')
-    args = parser.parse_args()
-    infile = args.pedigree_file[0]
-    file_type = args.file_type[0]
-    my_parser = FamilyParser(infile, file_type)
+@click.command()
+@click.argument('family_file', 
+                    nargs=1, 
+                    type=click.Path(),
+                    metavar='<family_file>'
+)
+@click.option('-t', '--family_type',
+                    type=click.Choice(['ped', 'alt', 'cmms', 'mip']),
+                    default='ped',
+                    help='If the analysis use one of the known setups, please specify which one. Default is ped'
+)
+def cli(family_file, family_type):
+    """Cli for testing the ped parser."""
+    
+    my_parser = FamilyParser(family_file, family_type)
     print('Families: %s' % ','.join(list(my_parser.families.keys())))
     for family in my_parser.families:
         print('Fam %s' % family)
+        print('Number of individuals: %s' % len(my_parser.families[family].individuals))
         print('Models: %s' % my_parser.families[family].models_of_inheritance)
         print('Individuals: ')
         for individual in my_parser.families[family].individuals:
             print(my_parser.families[family].individuals[individual])
         print('Affected individuals: %s' % ','.join(my_parser.families[family].affected_individuals))
         print('')
-    print('Json ped:')
-    pp(my_parser.get_json())
-    pp(my_parser.individuals)
+    # print('Json ped:')
+    # pp(my_parser.to_json())
+    # pp(my_parser.individuals)
+    print('\n'.join(my_parser.to_madeline()))
     
         
 
 
 if __name__ == '__main__':
-    main()
+    cli()

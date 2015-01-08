@@ -1,0 +1,5 @@
+#FamilyID	SampleID	Father	Mother	Sex	Phenotype	Proband	Consultand	Alive
+1	proband	father	mother	1	2	Yes	Yes	Yes
+1	mother	0	0	2	1	No	Yes	Yes
+1	father	0	0	1	1	No	Yes	No
+1	daughter	father	mother	1	2	No	No	Yes
