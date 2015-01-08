@@ -28,7 +28,7 @@ The following column names will be treated with care, which means that they will
 
 ```InheritanceModel``` - a ';'-separated list of expected inheritance models.
 
-Choices are 
+Choices are
 
 ```['AR','AR_hom','AR_denovo','AR_hom_denovo','AR_hom_dn','AR_dn','AR_compound','AR_comp','AD','AD_dn','AD_denovo','X','X_dn','X_denovo','NA','Na','na','.']```
 
