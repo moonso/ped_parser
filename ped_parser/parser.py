@@ -70,7 +70,6 @@ class FamilyParser(object):
                 self.alternative_parser(family_file)
             elif self.family_type in ['cmms', 'mip']:
                 self.alternative_parser(family_file)
-                self.check_cmms_file(family_file, family_type)
             # elif family_type == 'broad':
             #     self.broad_parser(individual_line, line_count)
         for fam in self.families:
@@ -157,6 +156,7 @@ class FamilyParser(object):
         """This parses a ped file with more than six columns, in that case header comlumn must exist and each row must have the same amount of columns as the header. First six columns must be the same as in the ped format."""
         
         alternative_header = None
+        
         for line in family_file:
             if line.startswith('#'):
                 alternative_header = line[1:].rstrip().split('\t')
@@ -190,7 +190,10 @@ class FamilyParser(object):
                         self.families[sample_dict['family_id']] = family.Family(sample_dict['family_id'], {})
                     
                     sample_dict['genetic_models'] = all_info.get('InheritanceModel', None)
-                    
+                    # Try other header naming:
+                    if not sample_dict['genetic_models']:
+                        sample_dict['genetic_models'] = all_info.get('Inheritance_model', None)
+                        
                     sample_dict['proband'] = all_info.get('Proband', '.')
                     sample_dict['consultand'] = all_info.get('Consultand', '.')
                     sample_dict['alive'] = all_info.get('Alive', '.')
@@ -201,79 +204,86 @@ class FamilyParser(object):
                     self.individuals[ind_object.individual_id] = ind_object
                     self.families[ind_object.family].add_individual(ind_object)
                     
+                    if sample_dict['genetic_models']:
+                        for model in self.get_models(sample_dict['genetic_models']):
+                            self.families[ind_object.family].models_of_inheritance.add(model)
+                    
+                    # We try is it is an id in the CMMS format:
+                    if len(ind_object.individual_id.split('-')) == 3:
+                        if not self.check_cmms_id(ind_object):
+                            sys.ext(1)
                     
                     for i in range(6, len(splitted_line)):
                         ind_object.extra_info[alternative_header[i]] = splitted_line[i]
         
+    def get_models(self, genetic_models):
+        """
+        Check what genetic models that are found and return them as a set.
+        
+        Args:
+            genetic_models  : A string with genetic models
+        
+        Returns:
+             correct_model_names  : A set with the correct model names
+        """
+        correct_model_names = set()
+        genetic_models = genetic_models.split(';')
+        correct_model_names = set()
+        for model in genetic_models:
+            # We need to allow typos
+            if model in self.legal_ar_hom_names:
+                model = 'AR_hom'
+            elif model in self.legal_ar_hom_dn_names:
+                model = 'AR_hom_dn'
+            elif model in self.legal_ad_names:
+                model = 'AD_dn'
+            elif model in self.legal_compound_names:
+                model = 'AR_comp'
+            elif model in self.legal_x_names:
+                model = 'X'
+            elif model in self.legal_na_names:
+                model = 'NA'
+            else:
+                print('Incorrect model name: %s' % model, file=sys.stderr)
+                print('Legal models: %s' % ','.join(self.legal_ar_hom_names+
+                                                    self.legal_ar_hom_dn_names+
+                                                    self.legal_ad_names+
+                                                    self.legal_compound_names+
+                                                    self.legal_x_names+
+                                                    self.legal_na_names), file=sys.stderr)
+                print('Exiting..')
+                sys.exit(1)
+            correct_model_names.add(model)
+        return correct_model_names
+        
+    def check_cmms_id(self, ind_object):
+        """
+        Take the ID and check if it is following the cmms standard.
+        In that case we can do a check to see if it is formated in the correct way.
+        
+        Input:
+            ind_obj : A individual object
+        
+        Returns:
+            bool    : True if it is correct
+        """
+        ind_id = ind_object.individual_id.split('-')
+        affection_status = ind_id[-1][-1] # This in A (=affected) or U (=unaffected)
+        phenotype = ind_object.phenotype
+        sex = ind_object.sex
+        if (affection_status == 'A' and phenotype != 2 or 
+            affection_status == 'U' and phenotype != 1):
+            print('Affection status disagrees with phenotype:\n %s' % individual_line, file=sys.stderr)
+            print('Exiting ...', file=sys.stderr)
+            return False
+        
+        sex_code = int(ind_id[-1][:-1])# Males allways have odd numbers and womans even
+        if (sex_code % 2 == 0 and sex != 2) or (sex_code % 2 != 0 and sex != 1):
+            print('Gender code in id disagrees with sex:\n %s' % individual_line, file=sys.stderr)
+            print('Exiting ...', file=sys.stderr)
+            return False
+        return True
     
-    def check_cmms_file(self, family_file, family_type):
-        """Parse a .ped ped file."""
-        
-        family_file.seek(0)
-        
-        for individual_line in family_file:
-            if not individual_line.startswith('#'):
-                line = individual_line.rstrip().split('\t')
-                info = {}
-                for i in range(len(line)):
-                    if self.header[i] == 'Inheritance_model':
-                        #If inheritance model is specified it is a ';'-separated list of models
-                        info[self.header[i]] = line[i].split(';')
-                    else:
-                        info[self.header[i]] = line[i]
-                ind = info['SampleID']
-                fam_id = info['FamilyID']
-                
-                # If cmms type we can check the sample names
-                if family_type == 'cmms':
-                    affection_status = ind.split('-')[-1][-1] # This in A (=affected) or U (=unaffected)
-                    phenotype = self.families[fam_id].individuals[ind].phenotype
-                    sex = self.families[fam_id].individuals[ind].sex
-                    if (affection_status == 'A' and phenotype != 2 or 
-                        affection_status == 'U' and phenotype != 1):
-                        print('Affection status disagrees with phenotype:\n %s' % individual_line, file=sys.stderr)
-                        print('Exiting ...', file=sys.stderr)
-                        sys.exit(1)
-                    sex_code = int(ind.split('-')[-1][:-1])# Males allways have odd numbers and womans even
-                    if (sex_code % 2 == 0 and sex != 2) or (sex_code % 2 != 0 and sex != 1):
-                        print('Gender code in id disagrees with sex:\n %s' % individual_line, file=sys.stderr)
-                        print('Exiting ...', file=sys.stderr)
-                        sys.exit(1)
-                
-                models_of_inheritance = info.get('Inheritance_model', ['NA'])
-                
-                correct_model_names = set()
-                for model in models_of_inheritance:
-                    # We need to allow typos
-                    if model in self.legal_ar_hom_names:
-                        model = 'AR_hom'
-                    elif model in self.legal_ar_hom_dn_names:
-                        model = 'AR_hom_dn'
-                    elif model in self.legal_ad_names:
-                        model = 'AD_dn'
-                    elif model in self.legal_compound_names:
-                        model = 'AR_comp'
-                    elif model in self.legal_x_names:
-                        model = 'X'
-                    elif model in self.legal_na_names:
-                        model = 'NA'
-                    else:
-                        print('Incorrect model name: %s' % model, file=sys.stderr)
-                        print('Legal models: %s' % ','.join(self.legal_ar_hom_names+
-                                                            self.legal_ar_hom_dn_names+
-                                                            self.legal_ad_names+
-                                                            self.legal_compound_names+
-                                                            self.legal_x_names+
-                                                            self.legal_na_names), file=sys.stderr)
-                        print('Exiting..')
-                        sys.exit(1)
-                    correct_model_names.add(model)
-                
-                correct_model_names = list(correct_model_names)
-                
-                if correct_model_names != ['NA']:
-                    self.families[fam_id].models_of_inheritance = correct_model_names
-        
     def to_json(self):
         """Return the information from the pedigree file as a json like object.
             This will be a list with dictionaries for each family as:

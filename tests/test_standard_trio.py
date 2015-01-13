@@ -43,7 +43,14 @@ class TestIndividual(object):
     def test_standard_trio(self):
         """Test if the file is parsed in a correct way."""
         family_parser = parser.FamilyParser(self.trio_file.name)
-        assert family_parser.header == ['FamilyID', 'SampleID', 'Father', 'Mother', 'Sex', 'Phenotype']
+        assert family_parser.header == [
+                                    'family_id', 
+                                    'sample_id', 
+                                    'father_id', 
+                                    'mother_id', 
+                                    'sex', 
+                                    'phenotype'
+                                    ]
         assert 'healthyParentsAffectedSon' in family_parser.families
         assert set(['proband', 'mother', 'father']) == set(family_parser.families['healthyParentsAffectedSon'].individuals.keys())
         assert set(['proband', 'mother', 'father']) == set(family_parser.families['healthyParentsAffectedSon'].trios[0])
