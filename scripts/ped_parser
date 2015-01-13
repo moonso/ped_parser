@@ -24,7 +24,7 @@ from codecs import getwriter, open
 
 import pkg_resources
 import ped_parser
-from ped_parser import parser
+from ped_parser import FamilyParser
 
 if sys.version_info < (3,0):
     sys.stdout = getwriter('UTF-8')(sys.stdout)
@@ -87,7 +87,7 @@ def ped_parser(family_file, family_type, outfile, to_json, to_madeline, verbose)
         Default is to prints the family file to in ped format to output. 
         For more information, please see github.com/moonso/ped_parser.
     """
-    my_parser = parser.FamilyParser(infile = family_file, family_type=family_type)
+    my_parser = FamilyParser(infile = family_file, family_type=family_type)
     start = datetime.now()
     if verbose:
         print('Families found in file: %s' % ','.join(list(my_parser.families.keys())), file=sys.stderr)

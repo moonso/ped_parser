@@ -33,7 +33,7 @@ import os
 
 class Family(object):
     """Base class for the family parsers."""
-    def __init__(self, family_id, individuals = {}, models_of_inheritance=['NA']):
+    def __init__(self, family_id, individuals = {}, models_of_inheritance=set([])):
         super(Family, self).__init__()
         self.individuals = individuals # This is a dict with individual objects
         self.family_id = family_id
@@ -142,10 +142,9 @@ class Family(object):
             phenotype = self.individuals[individual_id].phenotype
         return phenotype
     
-    def print_trios(self):
+    def get_trios(self):
         """Print the trios found as pedigree files"""
-        for trio in self.trios:
-            print(trio)
+        return self.trios
     
     def __str__(self):
         """Print the family members of this family"""

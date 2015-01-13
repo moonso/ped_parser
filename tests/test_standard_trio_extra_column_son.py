@@ -45,7 +45,7 @@ class TestIndividual(object):
     
     def test_standard_trio_proband_extra_column(self):
         """Test if the file is parsed in a correct way."""
-        with pytest.raises(SyntaxError):
+        with pytest.raises(SystemExit):
             family_parser = parser.FamilyParser(self.trio_file.name)
 
 
