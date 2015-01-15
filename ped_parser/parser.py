@@ -140,7 +140,7 @@ class FamilyParser(object):
                     print(e)
                     print("""One of the ped lines have %s number of entrys:\n%s""" % (len(splitted_line), line), file=sys.stderr)
                     print("Ped lines can only have 6 entrys. "
-                            "Use flag '--family_type/-f' if you are using an alternative ped file.", file=sys.stderr)
+                            "Use flag '--family_type/-t' if you are using an alternative ped file.", file=sys.stderr)
                     sys.exit(1)
                 
                 sample_dict = dict(zip(self.header, splitted_line))
@@ -161,8 +161,6 @@ class FamilyParser(object):
         for line in family_file:
             if line.startswith('#'):
                 alternative_header = line[1:].rstrip().split('\t')
-                print('Alternative header: %s' % alternative_header)
-                print(len(alternative_header))
             elif not all(c in whitespace for c in line.rstrip()):
                 if not alternative_header:
                     print('Alternative ped files must have headers!')
@@ -348,15 +346,19 @@ class FamilyParser(object):
         return correct_model_names
     
     def to_json(self):
-        """Return the information from the pedigree file as a json like object.
-            This will be a list with dictionaries for each family as:
+        """
+        Return the information from the pedigree file as a json like object.
+        This will be a list with dictionaries for each family as:
             [{'id': family_id, individuals: 
                 [{'id':individual_id, 'sex':gender_code, 'phenotype': phenotype_code, 
                     'mother': mother_id, father: father_id}, ...]}]
-            This object can easily be converted to a json object.
-            
-            Yields:
-                dict: family information described above
+        This object can easily be converted to a json object.
+        
+        Arguments:
+          none
+          
+        Returns:
+          json_families: a dictionary with thefamily information described above
         """
         json_families = []
         for family_id in self.families:
