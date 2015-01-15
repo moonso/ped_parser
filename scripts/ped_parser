@@ -87,7 +87,8 @@ def ped_parser(family_file, family_type, outfile, to_json, to_madeline, verbose)
         Default is to prints the family file to in ped format to output. 
         For more information, please see github.com/moonso/ped_parser.
     """
-    my_parser = FamilyParser(infile = family_file, family_type=family_type)
+    my_parser = FamilyParser(infile = family_file, family_type=family_type, 
+                                verbose=verbose)
     start = datetime.now()
     if verbose:
         print('Families found in file: %s' % ','.join(list(my_parser.families.keys())), file=sys.stderr)
