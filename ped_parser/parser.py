@@ -50,9 +50,10 @@ import click
 
 class FamilyParser(object):
     """Parses a file with family info and creates a family object with individuals."""
-    def __init__(self, infile, family_type = 'ped'):
+    def __init__(self, infile, family_type = 'ped', verbose=False):
         super(FamilyParser, self).__init__()
         self.family_type = family_type
+        self.verbose = verbose
         self.families = {}
         self.individuals = {}
         self.legal_ar_hom_names = ['AR', 'AR_hom']
@@ -160,6 +161,8 @@ class FamilyParser(object):
         for line in family_file:
             if line.startswith('#'):
                 alternative_header = line[1:].rstrip().split('\t')
+                print('Alternative header: %s' % alternative_header)
+                print(len(alternative_header))
             elif not all(c in whitespace for c in line.rstrip()):
                 if not alternative_header:
                     print('Alternative ped files must have headers!')
@@ -210,11 +213,99 @@ class FamilyParser(object):
                     
                     # We try is it is an id in the CMMS format:
                     if len(ind_object.individual_id.split('-')) == 3:
-                        if not self.check_cmms_id(ind_object):
-                            sys.ext(1)
-                    
+                        # If the id follow the cmms conventiion we can
+                        # do a sanity check
+                        if self.check_cmms_id(ind_object.individual_id):
+                            if self.verbose:
+                                print('Id follows CMMS convention!', file=sys.stderr)
+                            if not self.check_cmms_affection_status(ind_object):
+                                sys.exit(1)
+                            if not self.check_cmms_gender(ind_object):
+                                sys.exit(1)
+                                
                     for i in range(6, len(splitted_line)):
                         ind_object.extra_info[alternative_header[i]] = splitted_line[i]
+    
+    def check_cmms_id(self, ind_id):
+        """
+        Take the ID and check if it is following the cmms standard.
+        The standard is year:id-generation-indcode:affectionstatus.
+        Year is two digits, id three digits, generation in roman letters
+        indcode are digits and affection status are in ['A', 'U', 'X'].
+        Example 11001-II-1A.
+        
+        Input:
+            ind_obj : A individual object
+        
+        Returns:
+            bool    : True if it is correct
+        """
+        ind_id = ind_id.split('-')
+        # This in A (=affected), U (=unaffected) or X (=unknown)
+        family_id = ind_id[0]
+        try:
+            int(family_id)
+        except ValueError:
+            return False
+        affection_status = ind_id[-1][-1]
+        try:
+            type(affection_status.isalpha())
+        except ValueError:
+            return False
+        
+        return True
+    
+    def check_cmms_affection_status(self, ind_object):
+        """
+        Check if the affection status is correct.
+        
+        Args:
+            ind_object  : An Individuals object
+        
+        Returns:
+            bool : True if affection status is correct
+                    False otherwise
+        """
+        ind_id = ind_object.individual_id.split('-')
+        phenotype = ind_object.phenotype
+        affection_status = ind_id[-1][-1]
+        if affection_status not in ['A', 'U', 'X']:
+            print('Wrong affection status %s' 
+                    % ind_object.individual_id, file=sys.stderr)
+            print("Affection status can be ['A', 'U', 'X']")
+            print('Exiting ...', file=sys.stderr)
+            return False
+        
+        if (affection_status == 'A' and phenotype != 2 or 
+            affection_status == 'U' and phenotype != 1):
+            print('Affection status disagrees with phenotype:\n%s'
+                     % ind_object.individual_id, file=sys.stderr)
+            print('Exiting ...', file=sys.stderr)
+            return False
+            
+        return True
+    
+    def check_cmms_gender(self, ind_object):
+        """
+        Check if the phenotype is correct.
+        
+        Args:
+            ind_object  : An Individuals object
+        
+        Returns:
+            bool : True if phenotype status is correct
+                    False otherwise
+        """
+        ind_id = ind_object.individual_id.split('-')
+        sex = ind_object.sex
+        sex_code = int(ind_id[-1][:-1])# Males allways have odd numbers and womans even
+        if (sex_code % 2 == 0 and sex != 2) or (sex_code % 2 != 0 and sex != 1):
+            print('Gender code in id disagrees with sex:\n %s' 
+                    % ind_object.individual_id, file=sys.stderr)
+            print('Exiting ...', file=sys.stderr)
+            return False
+        
+        return True
         
     def get_models(self, genetic_models):
         """
@@ -255,34 +346,6 @@ class FamilyParser(object):
                 sys.exit(1)
             correct_model_names.add(model)
         return correct_model_names
-        
-    def check_cmms_id(self, ind_object):
-        """
-        Take the ID and check if it is following the cmms standard.
-        In that case we can do a check to see if it is formated in the correct way.
-        
-        Input:
-            ind_obj : A individual object
-        
-        Returns:
-            bool    : True if it is correct
-        """
-        ind_id = ind_object.individual_id.split('-')
-        affection_status = ind_id[-1][-1] # This in A (=affected) or U (=unaffected)
-        phenotype = ind_object.phenotype
-        sex = ind_object.sex
-        if (affection_status == 'A' and phenotype != 2 or 
-            affection_status == 'U' and phenotype != 1):
-            print('Affection status disagrees with phenotype:\n %s' % individual_line, file=sys.stderr)
-            print('Exiting ...', file=sys.stderr)
-            return False
-        
-        sex_code = int(ind_id[-1][:-1])# Males allways have odd numbers and womans even
-        if (sex_code % 2 == 0 and sex != 2) or (sex_code % 2 != 0 and sex != 1):
-            print('Gender code in id disagrees with sex:\n %s' % individual_line, file=sys.stderr)
-            print('Exiting ...', file=sys.stderr)
-            return False
-        return True
     
     def to_json(self):
         """Return the information from the pedigree file as a json like object.
