@@ -4,9 +4,9 @@
 A small tool for parsing files in the [pedigree (.ped) format](http://pngu.mgh.harvard.edu/~purcell/plink/data.shtml#ped).
 The parser will create a family object for each family found in the pedigree file and a individual object for each individual found.
 The tool can be used to access information from ped files or convert the data to [madeline2](http://eyegene.ophthy.med.umich.edu/madeline/index.php) format for drawing pedigree trees.
+Also it is possible to create family objects and individual object and print the in ped and madeline formats.
 
 ## General ##
-
 
 Parse a file with family info, this can be a .ped file, a .fam, a .txt(alternative ped style) 
 file or another ped based alternative.
@@ -66,7 +66,7 @@ In this case use:
 
     ped_parser infile.ped --family_type alt
 
-## Madeline2 conversion ##
+### Madeline2 conversion ###
 
 
 [Madeline2](http://eyegene.ophthy.med.umich.edu/madeline/index.php) is an excellent tool to draw pedigrees but they use there own input formats. ped_parser can now produce madeline2 input files from ped files by using
@@ -80,40 +80,51 @@ The following columns will be added to the madeline file:
 Since only the first six of these columns are the standard ped format columns ped parser allows for alternative pedigree files with the following rules:
 
 
-##Methods##
+### json conversion ###
 
-	my_parser.get_json()
 
-returns the families in a list of dictionaries that can be made to json object. Looks like:
 
-````
-[
-	{'family_id': '1',
-  	 'individuals': [
-		 		{'father': '0',
-                   'individual_id': 'mother',
-                   'mother': '0',
-                   'phenotype': 1,
-                   'sex:': 2
-			   	},
-                  {'father': 'father',
-                   'individual_id': 'daughter',
-                   'mother': 'mother',
-                   'phenotype': 2,
-                   'sex:': 1
-			    },
-                  {'father': '0',
-                   'individual_id': 'father',
-                   'mother': '0',
-                   'phenotype': 1,
-                   'sex:': 1
-			    },
-                  {'father': 'father',
-                   'individual_id': 'proband',
-                   'mother': 'mother',
-                   'phenotype': 2,
-                   'sex:': 1
-			   }
-			  ]
- 	}
-]```
+    ped_parser input.ped --to_json [-o output.txt]
+
+This is a list with lists that represents families, families have
+dictionaries that represents individuals like
+
+ ```json
+     [ 
+       [
+          {
+            'family_id:family_id',
+            'id':individual_id, 
+            'sex':gender_code, 
+            'phenotype': phenotype_code, 
+            'mother': mother_id, 
+            'father': father_id
+            }, 
+          {
+            ...
+          }
+        ],
+        [
+            
+        ]
+    ]
+```
+
+### Create ped like objects ###
+
+Ped like objects can be created from within a python program and convert them to ped, json or madeline output like this
+
+```python
+    
+    >from ped_parser import Individual, Family
+    
+    >my_individuals = []
+    >my_individuals.append(Individual('proband', family='1', mother='mother', father='father',sex='1',phenotype='2'))
+    >my_individuals.append(Individual('mother', family='1', mother='0', father='0',sex='2',phenotype='1'))
+    >my_individuals.append(Individual('father', family='1', mother='0', father='0',sex='1',phenotype='1'))
+    >my_family = Family(family_id='1')
+    >for individual in my_individuals:
+        my_family.add_individual(individual)
+    >my_family.to_ped(outfile)
+
+```
