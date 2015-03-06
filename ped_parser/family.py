@@ -24,20 +24,21 @@ Created by Måns Magnusson on 2014-02-05.
 Copyright (c) 2014 __MyCompanyName__. All rights reserved.
 """
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
+from __future__ import print_function, unicode_literals
 
 import sys
 import os
+import click
 
 class Family(object):
     """Base class for the family parsers."""
     def __init__(self, family_id, individuals = {}, models_of_inheritance=set([])):
         super(Family, self).__init__()
-        self.individuals = individuals # This is a dict with individual objects
+         # This is a dict with individual objects
+        self.individuals = individuals
         self.family_id = family_id
-        self.models_of_inheritance = models_of_inheritance # List of models of inheritance that should be prioritized.
+        # List of models of inheritance that should be prioritized.
+        self.models_of_inheritance = models_of_inheritance 
         self.trios = [] #Trios are a list of sets with trios.
         self.duos = [] #Duos are a list of sets with trios.
         self.no_relations = True
@@ -131,8 +132,14 @@ class Family(object):
                 
                 Adds the individual object to the family.
         """
-        
-        self.individuals[individual_object.individual_id] = individual_object
+        if individual_object.family != self.family_id:
+            print("Family id of individual is not the same as family id for "
+                    "Family object!", file=sys.stderr)
+            print("Family id of individual:{0} Family id for Family object:"\
+                    "{1}".format(individual_object.family, self.family_id), 
+                        file=sys.stderr)
+        else:
+            self.individuals[individual_object.individual_id] = individual_object
         return
     
     def get_phenotype(self, individual_id):
@@ -146,15 +153,43 @@ class Family(object):
         """Print the trios found as pedigree files"""
         return self.trios
     
+    def to_ped(self, outfile=None):
+        """Print the individuals of the family in ped format"""
+        for individual in self.individuals:
+            ped_line = self.individuals[individual].get_ped()
+            if outfile:
+                outfile.write(ped_line+'\n')
+            else:
+                print(ped_line)
+    
+    def __repr__(self):
+        return "Family(family_id={0}, individuals={1}, " \
+                "models_of_inheritance={2}".format(
+                    self.family_id, self.individuals.keys(), 
+                    self.models_of_inheritance
+                    )
+        
     def __str__(self):
         """Print the family members of this family"""
         family = list(self.individuals.keys())
         return "\t".join(family)
 
-
-def main():
-    pass
+@click.command()
+@click.option('-o', '--outfile',
+                type=click.File('a')
+                )
+def cli(outfile):
+    from ped_parser.individual import Individual
+    proband = Individual('proband', family='1', mother='mother', father='father',sex='1',phenotype='2')
+    mother = Individual('mother', family='1', mother='0', father='0',sex='2',phenotype='1')
+    father = Individual('father', family='1', mother='0', father='0',sex='1',phenotype='1')
+    my_family = Family(family_id='1')
+    my_family.add_individual(proband)
+    my_family.add_individual(mother)
+    my_family.add_individual(father)
+    my_family.to_ped(outfile)
+    # print(repr(proband))
 
 
 if __name__ == '__main__':
-    main()
+    cli()

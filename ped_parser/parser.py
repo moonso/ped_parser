@@ -41,6 +41,8 @@ from __future__ import unicode_literals
 import sys
 import os
 import argparse
+import json
+
 from codecs import open
 from string import whitespace
 from ped_parser import individual, family
@@ -345,45 +347,56 @@ class FamilyParser(object):
             correct_model_names.add(model)
         return correct_model_names
     
-    def to_json(self):
+    def to_json(self, outfile):
         """
-        Return the information from the pedigree file as a json like object.
-        This will be a list with dictionaries for each family as:
-            [{'id': family_id, individuals: 
-                [{'id':individual_id, 'sex':gender_code, 'phenotype': phenotype_code, 
-                    'mother': mother_id, father: father_id}, ...]}]
+        Print the information from the pedigree file as a json like object.
+        This is a list with lists that represents families, families have
+        dictionaries that represents individuals like
+            [ 
+                [
+                    {
+                        'family_id:family_id',
+                        'id':individual_id, 
+                        'sex':gender_code, 
+                        'phenotype': phenotype_code, 
+                        'mother': mother_id, 
+                        'father': father_id
+                    }, 
+                    {
+                        ...
+                    }
+                ],
+                [
+                    
+                ]
+            ]
         This object can easily be converted to a json object.
         
         Arguments:
-          none
+          outfile
           
-        Returns:
-          json_families: a dictionary with thefamily information described above
         """
         json_families = []
         for family_id in self.families:
-            family = {'family_id': str(family_id),
-                        'individuals': [],
-                        }
+            family = []
             for individual_id in self.families[family_id].individuals:
-                individual = {'individual_id': individual_id,
-                                'sex': self.families[family_id].individuals[individual_id].sex,
-                                'phenotype': self.families[family_id].individuals[individual_id].phenotype,
-                                'mother': self.families[family_id].individuals[individual_id].mother,
-                                'father': self.families[family_id].individuals[individual_id].father
-                            }
-                if len(self.families[family_id].individuals[individual_id].extra_info) > 0:
-                    individual['extra_info'] = self.families[family_id].individuals[individual_id].extra_info
-                family['individuals'].append(individual)
+                individual = self.families[family_id].individuals[individual_id]
+                family.append(individual.get_json())
+                
             json_families.append(family)
         
-        return json_families
+        if outfile:
+            outfile.write(json.dumps(json_families))
+        else: 
+            print(json.dumps(json_families))
+        return
     
     def to_madeline(self, outfile=None):
-        """Produce output in madeline format. If no outfile is given print to screen.
-            In Madeline gender is represented by ['M','m','F','f']. Affected is ['A','a','U','u']"""
+        """
+        Produce output in madeline format. If no outfile is given print to 
+        screen.
+        """
         
-        madeline_families = []
         madeline_header = [
             'FamilyID', 
             'IndividualID', 
@@ -393,60 +406,49 @@ class FamilyParser(object):
             'Affected',
             'Proband',
             'Consultand',
-            'Alive']
-        madeline_families.append('\t'.join(madeline_header))
+            'Alive'
+        ]
+        if outfile:
+            outfile.write('\t'.join(madeline_header) + '\n')
+        else:
+            print('\t'.join(madeline_header))
+        
         for family_id in self.families:
             for individual_id in self.families[family_id].individuals:
-                #Convert sex to madeleine type
-                sex = self.families[family_id].individuals[individual_id].sex
-                if sex == 1:
-                    madeline_gender = 'M'
-                elif sex == 2:
-                    madeline_gender = 'F'
+                individual = self.families[family_id].individuals[individual_id]
+                if outfile:
+                    outfile.write(individual.get_madeline()+'\n')
                 else:
-                    madeline_gender = '.'
-                #Convert father to madeleine type
-                father = self.families[family_id].individuals[individual_id].father
-                if father == '0':
-                    madeline_father = '.'
+                    print(individual.get_madeline())
+        return 
+    
+    def to_ped(self, outfile=None):
+        """
+        Produce output in ped format. If no outfile is given print to 
+        screen.
+        """
+        
+        ped_header = [
+            '#FamilyID', 
+            'IndividualID', 
+            'PaternalID', 
+            'MaternalID', 
+            'Sex', 
+            'Phenotype',
+        ]
+        if outfile:
+            outfile.write('\t'.join(ped_header) + '\n')
+        else:
+            print('\t'.join(ped_header))
+        
+        for family_id in self.families:
+            for individual_id in self.families[family_id].individuals:
+                individual = self.families[family_id].individuals[individual_id]
+                if outfile:
+                    outfile.write(individual.get_ped()+'\n')
                 else:
-                    madeline_father = father
-                #Convert mother to madeleine type
-                mother = self.families[family_id].individuals[individual_id].mother
-                if mother == '0':
-                    madeline_mother = '.'
-                else:
-                    madeline_mother = mother
-                #Convert phenotype to madeleine type
-                phenotype = self.families[family_id].individuals[individual_id].phenotype
-                if phenotype == 1:
-                    madeline_phenotype = 'U'
-                elif phenotype == 2:
-                    madeline_phenotype = 'A'
-                else:
-                    madeline_phenotype = '.'
-                
-                madeline_proband = self.families[family_id].individuals[individual_id].proband
-                madeline_consultand = self.families[family_id].individuals[individual_id].consultand
-                madeline_alive = self.families[family_id].individuals[individual_id].alive
-                
-                madeline_families.append('\t'.join(
-                                            [
-                                                family_id, 
-                                                individual_id, 
-                                                madeline_gender,
-                                                madeline_father,
-                                                madeline_mother,
-                                                madeline_phenotype,
-                                                madeline_proband,
-                                                madeline_consultand,
-                                                madeline_alive
-                                            ]
-                                        )
-                                    )
-                                        
-        #     print(family_id, type(family_id))
-        return madeline_families
+                    print(individual.get_ped())
+        return 
     
 
 @click.command()
@@ -460,24 +462,32 @@ class FamilyParser(object):
                     default='ped',
                     help='If the analysis use one of the known setups, please specify which one. Default is ped'
 )
-def cli(family_file, family_type):
+@click.option('--to_json',
+                    is_flag=True,
+                    help='Print the ped file in json format'
+)
+@click.option('--to_madeline',
+                    is_flag=True,
+                    help='Print the ped file in madeline format'
+)
+@click.option('--to_ped',
+                    is_flag=True,
+                    help='Print the ped file in ped format with headers'
+)
+@click.option('-o', '--outfile',
+                type=click.File('a')
+                )
+def cli(family_file, family_type, to_json, to_madeline, to_ped, outfile):
     """Cli for testing the ped parser."""
     
     my_parser = FamilyParser(family_file, family_type)
-    print('Families: %s' % ','.join(list(my_parser.families.keys())))
-    for family in my_parser.families:
-        print('Fam %s' % family)
-        print('Number of individuals: %s' % len(my_parser.families[family].individuals))
-        print('Models: %s' % my_parser.families[family].models_of_inheritance)
-        print('Individuals: ')
-        for individual in my_parser.families[family].individuals:
-            print(my_parser.families[family].individuals[individual])
-        print('Affected individuals: %s' % ','.join(my_parser.families[family].affected_individuals))
-        print('')
-    # print('Json ped:')
-    # pp(my_parser.to_json())
-    # pp(my_parser.individuals)
-    print('\n'.join(my_parser.to_madeline()))
+    
+    if to_json:
+        my_parser.to_json(outfile)
+    elif to_madeline:
+        my_parser.to_madeline(outfile)
+    elif to_ped:
+        my_parser.to_ped(outfile)
     
         
 

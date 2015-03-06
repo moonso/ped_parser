@@ -61,7 +61,7 @@ def print_version(ctx, param, value):
                     help='If the analysis use one of the known setups, please specify which one. Default is ped'
 )
 @click.option('-o', '--outfile', 
-                    type=click.Path(exists=False),
+                    type=click.File('a'),
                     help='Specify the path to a file where results should be stored.'
 )
 @click.option('--to_json', 
@@ -71,6 +71,10 @@ def print_version(ctx, param, value):
 @click.option('--to_madeline', 
                     is_flag=True,
                     help='Print the ped file in madeline format.'
+)
+@click.option('--to_ped', 
+                    is_flag=True,
+                    help='Print the ped file in ped format with headers.'
 )
 @click.option('-v', '--verbose', 
                 is_flag=True,
@@ -82,7 +86,8 @@ def print_version(ctx, param, value):
                 expose_value=False,
                 is_eager=True
 )
-def ped_parser(family_file, family_type, outfile, to_json, to_madeline, verbose):
+def ped_parser(family_file, family_type, outfile, to_json, to_madeline, 
+                to_ped, verbose):
     """Tool for parsing ped files.\n
         Default is to prints the family file to in ped format to output. 
         For more information, please see github.com/moonso/ped_parser.
@@ -94,20 +99,11 @@ def ped_parser(family_file, family_type, outfile, to_json, to_madeline, verbose)
         print('Families found in file: %s' % ','.join(list(my_parser.families.keys())), file=sys.stderr)
     
     if to_json:
-        json_output = my_parser.to_json()
-        if outfile:
-            with open(outfile, 'w', encoding='utf-8') as f:
-                f.write(json.dumps(json_output))
-        else:
-            print(json.dumps(json_output))
+        json_output = my_parser.to_json(outfile)
     elif to_madeline:
-        madeline_output = my_parser.to_madeline()
-        if outfile:
-            with open(outfile, 'w', encoding='utf-8') as f:
-                for line in madeline_output:
-                    f.write(line+'\n')
-        else:
-            print('\n'.join(madeline_output))
+        madeline_output = my_parser.to_madeline(outfile)
+    elif to_ped:
+        madeline_output = my_parser.to_ped(outfile)
     else:
         # If no specific output is choosen, write a summary about the families to screen
         for family in my_parser.families:
