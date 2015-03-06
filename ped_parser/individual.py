@@ -90,7 +90,65 @@ class Individual(object):
             elif father.father != '0':
                 self.grandparents[father.father] = ''
         return
+    
+    def get_ped(self):
+        """Return the individual info in a ped formatted string."""
+        return "{0}\t{1}\t{2}\t{3}\t{4}\t{5}".format(
+            self.family, self.individual_id, self.father, self.mother,
+            self.sex, self.phenotype
+        )
+    
+    def get_json(self):
+        """Return the individual info in a dictionary for json."""
+        individual_info = {
+            'family_id': self.family,
+            'id':self.individual_id, 
+            'sex':str(self.sex), 
+            'phenotype': str(self.phenotype), 
+            'mother': self.mother, 
+            'father': self.father
+        }
+        return individual_info
+    
+    def get_madeline(self):
+        """Return the individual info in a madeline formated string"""
+        #Convert sex to madeleine type
+        if self.sex == 1:
+            madeline_gender = 'M'
+        elif self.sex == 2:
+            madeline_gender = 'F'
+        else:
+            madeline_gender = '.'
+        #Convert father to madeleine type
+        if self.father == '0':
+            madeline_father = '.'
+        else:
+            madeline_father = self.father
+        #Convert mother to madeleine type
+        if self.mother == '0':
+            madeline_mother = '.'
+        else:
+            madeline_mother = self.mother
+        #Convert phenotype to madeleine type
+        if self.phenotype == 1:
+            madeline_phenotype = 'U'
+        elif self.phenotype == 2:
+            madeline_phenotype = 'A'
+        else:
+            madeline_phenotype = '.'
         
+        return "{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}".format(
+            self.family, self.individual_id, madeline_gender, 
+            madeline_father, madeline_mother, madeline_phenotype,
+            self.proband, self.consultand, self.alive
+        )
+    def __repr__(self):
+        return "Individual(individual_id={0}, family={1}, mother={2}, " \
+                "father={3}, sex={4}, phenotype={5})".format(
+                    self.individual_id, self.family, self.mother, self.father,
+                    self.sex, self.phenotype
+                )
+    
     def __str__(self):
         """Returns what should be printed if object is printed."""
         ind_info = ['ind_id:', self.individual_id, 
