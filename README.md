@@ -13,12 +13,12 @@ file or another ped based alternative.
 
 .ped and .fam always have 6 columns, these are
 
-Family_ID - '.' or '0' for unknown
-Individual_ID - '.' or '0' for unknown
-Paternal_ID - '.' or '0' for unknown
-Maternal_ID - '.' or '0' for unknown
-Sex - '1'=male; '2'=female; ['other', '0', '.']=unknown
-Phenotype - '1'=unaffected, '2'=affected, ['-9', '0', '.']= missing, 
+Family_ID - '.' or '0' for unknown\n
+Individual_ID - '.' or '0' for unknown\n
+Paternal_ID - '.' or '0' for unknown\n
+Maternal_ID - '.' or '0' for unknown\n
+Sex - '1'=male; '2'=female; ['other', '0', '.']=unknown\n
+Phenotype - '1'=unaffected, '2'=affected, ['-9', '0', '.']= missing\n
 
 The other types must specify the columns in the header.
 Header always start with '#'.
@@ -118,10 +118,35 @@ Ped like objects can be created from within a python program and convert them to
     
     >from ped_parser import Individual, Family
     
+    >outfile = open('my_family.ped','a')
     >my_individuals = []
-    >my_individuals.append(Individual('proband', family='1', mother='mother', father='father',sex='1',phenotype='2'))
-    >my_individuals.append(Individual('mother', family='1', mother='0', father='0',sex='2',phenotype='1'))
-    >my_individuals.append(Individual('father', family='1', mother='0', father='0',sex='1',phenotype='1'))
+    >my_individuals.append(Individual(
+                                        'proband', 
+                                        family='1', 
+                                        mother='mother', 
+                                        father='father',
+                                        sex='1',
+                                        phenotype='2'
+                                      )
+                            )
+    >my_individuals.append(Individual(
+                                        'mother', 
+                                        family='1', 
+                                        mother='0', 
+                                        father='0',
+                                        sex='2',
+                                        phenotype='1'
+                                      )
+                            )
+    >my_individuals.append(Individual(
+                                        'father', 
+                                        'family'='1', 
+                                        'mother'='0', 
+                                        'father'='0',
+                                        'sex'='1',
+                                        'phenotype'='1'
+                                      )
+                            )
     >my_family = Family(family_id='1')
     >for individual in my_individuals:
         my_family.add_individual(individual)
