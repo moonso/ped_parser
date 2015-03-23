@@ -51,7 +51,7 @@ import json
 import click
 
 from string import whitespace
-from ped_parser import individual, family, init_log
+from ped_parser import Individual, Family
 from pprint import pprint as pp
 
 
@@ -68,12 +68,14 @@ class FamilyParser(object):
         self.families = {}
         self.individuals = {}
         self.legal_ar_hom_names = ['AR', 'AR_hom']
-        self.legal_ar_hom_dn_names = ['AR_denovo', 'AR_hom_denovo', 'AR_hom_dn', 'AR_dn']
+        self.legal_ar_hom_dn_names = ['AR_denovo', 'AR_hom_denovo', 
+                                      'AR_hom_dn', 'AR_dn']
         self.legal_compound_names = ['AR_compound', 'AR_comp']
         self.legal_ad_names = ['AD', 'AD_dn', 'AD_denovo']
         self.legal_x_names = ['X', 'X_dn', 'X_denovo']
         self.legal_na_names = ['NA', 'Na', 'na', '.']
-        self.header = ['family_id', 'sample_id', 'father_id', 'mother_id', 'sex', 'phenotype']
+        self.header = ['family_id', 'sample_id', 'father_id', 
+                       'mother_id', 'sex', 'phenotype']
         
         if self.family_type in ['ped', 'fam']:
             self.ped_parser(family_info)
@@ -85,8 +87,6 @@ class FamilyParser(object):
         #     self.broad_parser(individual_line, line_count)
         for fam in self.families:
             self.families[fam].family_check()
-            # print(self.families[family].trios)
-            # print(self.families[family].duos)
     
     def get_individual(self, family_id, sample_id, father_id, mother_id, sex, phenotype,
             genetic_models = None, proband='.', consultand='.', alive='.'):
@@ -107,7 +107,7 @@ class FamilyParser(object):
             alive (str): 'Yes', 'No' or '.'
         
         Yields:
-            A Individual object with the information
+            A Individual object with the information 
         """
         if sex not in ['1', '2']:
             sex = '0'
@@ -141,8 +141,18 @@ class FamilyParser(object):
         else:
             alive = '.'
         
-        individual_obj = individual.Individual(sample_id, family_id, mother_id, father_id, sex, phenotype,
-                        genetic_models, proband, consultand, alive)
+        individual_obj = Individual(
+                                        sample_id, 
+                                        family_id, 
+                                        mother_id, 
+                                        father_id, 
+                                        sex, 
+                                        phenotype, 
+                                        genetic_models, 
+                                        proband, 
+                                        consultand, 
+                                        alive
+                                    )
         
         return individual_obj
     
@@ -153,7 +163,9 @@ class FamilyParser(object):
         return
     
     def ped_parser(self, family_info):
-        """Parse a .ped ped file."""
+        """
+        Parse a .ped formatted family info.
+        """
         
         for line in family_info:
             # Check if commented line or empty line:
@@ -166,15 +178,18 @@ class FamilyParser(object):
                     self.check_line_length(splitted_line, 6)
                 except SyntaxError as e:
                     print(e)
-                    print("""One of the ped lines have %s number of entrys:\n%s""" % (len(splitted_line), line), file=sys.stderr)
-                    print("Ped lines can only have 6 entrys. "
-                            "Use flag '--family_type/-t' if you are using an alternative ped file.", file=sys.stderr)
+                    print("One of the ped lines have {0} number of entrys:"\
+                            "\n{1}".format(len(splitted_line), line), file=sys.stderr)
+                    print("Ped lines can only have 6 entrys. "\
+                          "Use flag '--family_type/-t' if you are using an"\
+                          " alternative ped file.", file=sys.stderr)
                     sys.exit(1)
                 
                 sample_dict = dict(zip(self.header, splitted_line))
+                family_id = sample_dict['family_id']
                 
                 if sample_dict['family_id'] not in self.families:
-                    self.families[sample_dict['family_id']] = family.Family(sample_dict['family_id'], {})
+                    self.families[family_id] = Family(family_id, {})
                 
                 ind_object = self.get_individual(**sample_dict)
                 self.individuals[ind_object.individual_id] = ind_object
@@ -217,10 +232,12 @@ class FamilyParser(object):
                     
                     sample_dict = dict(zip(self.header, splitted_line[:6]))
                     
+                    family_id = sample_dict['family_id']
+                    
                     all_info = dict(zip(alternative_header, splitted_line))
                     
                     if sample_dict['family_id'] not in self.families:
-                        self.families[sample_dict['family_id']] = family.Family(sample_dict['family_id'], {})
+                        self.families[family_id] = Family(family_id, {})
                     
                     sample_dict['genetic_models'] = all_info.get('InheritanceModel', None)
                     # Try other header naming:
@@ -230,7 +247,6 @@ class FamilyParser(object):
                     sample_dict['proband'] = all_info.get('Proband', '.')
                     sample_dict['consultand'] = all_info.get('Consultand', '.')
                     sample_dict['alive'] = all_info.get('Alive', '.')
-                    
                     
                     ind_object = self.get_individual(**sample_dict)
                     
