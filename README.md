@@ -13,12 +13,14 @@ file or another ped based alternative.
 
 .ped and .fam always have 6 columns, these are
 
-Family_ID - '.' or '0' for unknown\n
-Individual_ID - '.' or '0' for unknown\n
-Paternal_ID - '.' or '0' for unknown\n
-Maternal_ID - '.' or '0' for unknown\n
-Sex - '1'=male; '2'=female; ['other', '0', '.']=unknown\n
-Phenotype - '1'=unaffected, '2'=affected, ['-9', '0', '.']= missing\n
+```
+Family_ID - '.' or '0' for unknown
+Individual_ID - '.' or '0' for unknown
+Paternal_ID - '.' or '0' for unknown
+Maternal_ID - '.' or '0' for unknown
+Sex - '1'=male; '2'=female; ['other', '0', '.']=unknown
+Phenotype - '1'=unaffected, '2'=affected, ['-9', '0', '.']= missing
+```
 
 The other types must specify the columns in the header.
 Header always start with '#'.
