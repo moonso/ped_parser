@@ -4,8 +4,10 @@
 parser.py
 
 
-Parse a file with family info, this can be a .ped file, a .fam, a .txt(CMMS style) 
-file or a .txt(Broad style) file or another ped based alternative.
+Parse a iterator with family info, this can be a file handle, a file stream, 
+a list of strings etc.
+The family info can be in several formats, these are .ped , .fam, 
+.txt(extended ped format).
 
 .ped and .fam always have 6 columns, these are
 
@@ -20,69 +22,93 @@ The other types must specify the columns in the header.
 Header allways start with '#'.
 These files allways start with the ped columns described above.
 
-The following column names will be treated with care, which means that they will be used when outputting a madeline type of file or makes accesable variables in the parser:
+The following column names will be treated with care, which means that they 
+will be used when outputting a madeline type of file or makes accesable 
+variables in the parser:
 
 'InheritanceModel' - a ';'-separated list of expected inheritance models. 
 Choices are: 
-['AR','AR_hom','AR_denovo','AR_hom_denovo','AR_hom_dn','AR_dn','AR_compound','AR_comp','AD','AD_dn','AD_denovo','X','X_dn','X_denovo','NA','Na','na','.']
+    ['AR','AR_hom','AR_denovo','AR_hom_denovo','AR_hom_dn','AR_dn',
+    'AR_compound','AR_comp','AD','AD_dn','AD_denovo','X','X_dn',
+    'X_denovo','NA','Na','na','.']
 
-'Proband' - 'Yes', 'No', 'Unknown' or '.'.  A proband is the first affected member of a pedigree coming to medical attention.
-'Consultand' - 'Yes', 'No', 'Unknown' or '.'. A consultand is an individual who has sought genetic counseling or testing.
+'Proband' - 'Yes', 'No', 'Unknown' or '.'.  A proband is the first affected 
+member of a pedigree coming to medical attention.
+'Consultand' - 'Yes', 'No', 'Unknown' or '.'. A consultand is an individual 
+who has sought genetic counseling or testing.
 'Alive' - 'Yes', 'No', 'Unknown' or '.'
 
 Create a family object and its family members from different types of input file
 Created by Måns Magnusson on 2013-01-17.
-Copyright (c) 2013 __MyCompanyName__. All rights reserved.
+Copyright (c) 2013 __MoonsoInc__. All rights reserved.
 """
 
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import print_function, unicode_literals
 
 import sys
 import os
-import argparse
 import json
-
-from codecs import open
-from string import whitespace
-from ped_parser import individual, family
-from pprint import pprint as pp
-
 import click
 
+from string import whitespace
+from ped_parser import Individual, Family
+from pprint import pprint as pp
+
+
 class FamilyParser(object):
-    """Parses a file with family info and creates a family object with individuals."""
-    def __init__(self, infile, family_type = 'ped', verbose=False):
+    """
+    Parses a iterator with family info and creates a family object with 
+    individuals.
+    """
+    def __init__(self, family_info, family_type = 'ped', verbose=False):
         super(FamilyParser, self).__init__()
+        
         self.family_type = family_type
         self.verbose = verbose
         self.families = {}
         self.individuals = {}
         self.legal_ar_hom_names = ['AR', 'AR_hom']
-        self.legal_ar_hom_dn_names = ['AR_denovo', 'AR_hom_denovo', 'AR_hom_dn', 'AR_dn']
+        self.legal_ar_hom_dn_names = ['AR_denovo', 'AR_hom_denovo', 
+                                      'AR_hom_dn', 'AR_dn']
         self.legal_compound_names = ['AR_compound', 'AR_comp']
         self.legal_ad_names = ['AD', 'AD_dn', 'AD_denovo']
         self.legal_x_names = ['X', 'X_dn', 'X_denovo']
         self.legal_na_names = ['NA', 'Na', 'na', '.']
-        self.header = ['family_id', 'sample_id', 'father_id', 'mother_id', 'sex', 'phenotype']
-        with open(infile, 'r', encoding='utf-8') as family_file:
-            line_count = 0
-            if self.family_type in ['ped', 'fam']:
-                self.ped_parser(family_file)
-            elif self.family_type == 'alt':
-                self.alternative_parser(family_file)
-            elif self.family_type in ['cmms', 'mip']:
-                self.alternative_parser(family_file)
-            # elif family_type == 'broad':
-            #     self.broad_parser(individual_line, line_count)
+        self.header = ['family_id', 'sample_id', 'father_id', 
+                       'mother_id', 'sex', 'phenotype']
+        
+        if self.family_type in ['ped', 'fam']:
+            self.ped_parser(family_info)
+        elif self.family_type == 'alt':
+            self.alternative_parser(family_file)
+        elif self.family_type in ['cmms', 'mip']:
+            self.alternative_parser(family_info)
+        # elif family_type == 'broad':
+        #     self.broad_parser(individual_line, line_count)
         for fam in self.families:
             self.families[fam].family_check()
-            # print(self.families[family].trios)
-            # print(self.families[family].duos)
     
     def get_individual(self, family_id, sample_id, father_id, mother_id, sex, phenotype,
             genetic_models = None, proband='.', consultand='.', alive='.'):
-        """Return a individual object based on the indata."""
+        """
+        Return a individual object based on the indata.
+        
+        Arguments:
+            family_id (str): The id for this family
+            sample_id (str): The id for this sample
+            father_id (str): The id for this samples father
+            mother_id (str): The id for this samples mother
+            sex (str): The id for the sex of this sample
+            phenotype (str): The id for the phenotype of this sample
+            genetic_models (str): A ';'-separated string with the expected 
+            models of inheritance for this sample
+            proband (str): 'Yes', 'No' or '.'
+            consultand (str): 'Yes', 'No' or '.' if the individual is sequenced
+            alive (str): 'Yes', 'No' or '.'
+        
+        Yields:
+            A Individual object with the information 
+        """
         if sex not in ['1', '2']:
             sex = '0'
         if phenotype not in ['1', '2']:
@@ -115,8 +141,18 @@ class FamilyParser(object):
         else:
             alive = '.'
         
-        individual_obj = individual.Individual(sample_id, family_id, mother_id, father_id, sex, phenotype,
-                        genetic_models, proband, consultand, alive)
+        individual_obj = Individual(
+                                        sample_id, 
+                                        family_id, 
+                                        mother_id, 
+                                        father_id, 
+                                        sex, 
+                                        phenotype, 
+                                        genetic_models, 
+                                        proband, 
+                                        consultand, 
+                                        alive
+                                    )
         
         return individual_obj
     
@@ -126,10 +162,12 @@ class FamilyParser(object):
             raise SyntaxError('\nWRONG FORMATED PED LINE!\n')
         return
     
-    def ped_parser(self, family_file):
-        """Parse a .ped ped file."""
+    def ped_parser(self, family_info):
+        """
+        Parse a .ped formatted family info.
+        """
         
-        for line in family_file:
+        for line in family_info:
             # Check if commented line or empty line:
             if not line.startswith('#') and not all(c in whitespace for c in line.rstrip()):
                 splitted_line = line.rstrip().split('\t')
@@ -140,15 +178,18 @@ class FamilyParser(object):
                     self.check_line_length(splitted_line, 6)
                 except SyntaxError as e:
                     print(e)
-                    print("""One of the ped lines have %s number of entrys:\n%s""" % (len(splitted_line), line), file=sys.stderr)
-                    print("Ped lines can only have 6 entrys. "
-                            "Use flag '--family_type/-t' if you are using an alternative ped file.", file=sys.stderr)
+                    print("One of the ped lines have {0} number of entrys:"\
+                            "\n{1}".format(len(splitted_line), line), file=sys.stderr)
+                    print("Ped lines can only have 6 entrys. "\
+                          "Use flag '--family_type/-t' if you are using an"\
+                          " alternative ped file.", file=sys.stderr)
                     sys.exit(1)
                 
                 sample_dict = dict(zip(self.header, splitted_line))
+                family_id = sample_dict['family_id']
                 
                 if sample_dict['family_id'] not in self.families:
-                    self.families[sample_dict['family_id']] = family.Family(sample_dict['family_id'], {})
+                    self.families[family_id] = Family(family_id, {})
                 
                 ind_object = self.get_individual(**sample_dict)
                 self.individuals[ind_object.individual_id] = ind_object
@@ -156,7 +197,11 @@ class FamilyParser(object):
         
 
     def alternative_parser(self, family_file):
-        """This parses a ped file with more than six columns, in that case header comlumn must exist and each row must have the same amount of columns as the header. First six columns must be the same as in the ped format."""
+        """
+        This parses a ped file with more than six columns, in that case header
+        comlumn must exist and each row must have the same amount of columns 
+        as the header. First six columns must be the same as in the ped format.
+        """
         
         alternative_header = None
         
@@ -187,10 +232,12 @@ class FamilyParser(object):
                     
                     sample_dict = dict(zip(self.header, splitted_line[:6]))
                     
+                    family_id = sample_dict['family_id']
+                    
                     all_info = dict(zip(alternative_header, splitted_line))
                     
                     if sample_dict['family_id'] not in self.families:
-                        self.families[sample_dict['family_id']] = family.Family(sample_dict['family_id'], {})
+                        self.families[family_id] = Family(family_id, {})
                     
                     sample_dict['genetic_models'] = all_info.get('InheritanceModel', None)
                     # Try other header naming:
@@ -200,7 +247,6 @@ class FamilyParser(object):
                     sample_dict['proband'] = all_info.get('Proband', '.')
                     sample_dict['consultand'] = all_info.get('Consultand', '.')
                     sample_dict['alive'] = all_info.get('Alive', '.')
-                    
                     
                     ind_object = self.get_individual(**sample_dict)
                     
@@ -237,7 +283,7 @@ class FamilyParser(object):
         Input:
             ind_obj : A individual object
         
-        Returns:
+        Yields:
             bool    : True if it is correct
         """
         ind_id = ind_id.split('-')
@@ -262,7 +308,7 @@ class FamilyParser(object):
         Args:
             ind_object  : An Individuals object
         
-        Returns:
+        Yields:
             bool : True if affection status is correct
                     False otherwise
         """
@@ -292,7 +338,7 @@ class FamilyParser(object):
         Args:
             ind_object  : An Individuals object
         
-        Returns:
+        Yields:
             bool : True if phenotype status is correct
                     False otherwise
         """
@@ -314,7 +360,7 @@ class FamilyParser(object):
         Args:
             genetic_models  : A string with genetic models
         
-        Returns:
+        Yields:
              correct_model_names  : A set with the correct model names
         """
         correct_model_names = set()
@@ -454,8 +500,8 @@ class FamilyParser(object):
 @click.command()
 @click.argument('family_file', 
                     nargs=1, 
-                    type=click.Path(),
-                    metavar='<family_file>'
+                    type=click.File(),
+                    metavar="<family_file> or '-'"
 )
 @click.option('-t', '--family_type',
                     type=click.Choice(['ped', 'alt', 'cmms', 'mip']),
@@ -476,7 +522,18 @@ class FamilyParser(object):
 )
 @click.option('-o', '--outfile',
                 type=click.File('a')
-                )
+)
+# @click.option('-l', '--logfile',
+#                     type=click.Path(exists=False),
+#                     help="Path to log file. If none logging is "\
+#                           "printed to stderr."
+# )
+# @click.option('--loglevel',
+#                     type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR',
+#                                         'CRITICAL']),
+#                     default='INFO',
+#                     help="Set the level of log output."
+# )
 def cli(family_file, family_type, to_json, to_madeline, to_ped, outfile):
     """Cli for testing the ped parser."""
     

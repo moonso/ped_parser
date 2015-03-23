@@ -52,8 +52,8 @@ def print_version(ctx, param, value):
 @click.command()
 @click.argument('family_file', 
                     nargs=1, 
-                    type=click.Path(),
-                    metavar='<family_file>'
+                    type=click.File('r'),
+                    metavar='<family_file> or -'
 )
 @click.option('-t', '--family_type',
                     type=click.Choice(['ped', 'alt', 'cmms', 'mip']),
@@ -92,11 +92,14 @@ def ped_parser(family_file, family_type, outfile, to_json, to_madeline,
         Default is to prints the family file to in ped format to output. 
         For more information, please see github.com/moonso/ped_parser.
     """
-    my_parser = FamilyParser(infile = family_file, family_type=family_type, 
-                                verbose=verbose)
+    my_parser = FamilyParser(family_file, family_type, verbose)
     start = datetime.now()
     if verbose:
-        print('Families found in file: %s' % ','.join(list(my_parser.families.keys())), file=sys.stderr)
+        print('Families found in file: {0}'.format(
+                    ','.join(list(my_parser.families.keys()))
+                    ), 
+                    file=sys.stderr
+                )
     
     if to_json:
         json_output = my_parser.to_json(outfile)
@@ -110,13 +113,21 @@ def ped_parser(family_file, family_type, outfile, to_json, to_madeline,
             if verbose:
                 print('Fam: %s' % family, file=sys.stderr)
                 if family_type in ['cmms', 'mip']:
-                    print('Expected Inheritance Models: %s' % my_parser.families[family].models_of_inheritance, file=sys.stderr)
+                    print('Expected Inheritance Models: {0}'.format(
+                                my_parser.families[family].models_of_inheritance
+                                ), 
+                                file=sys.stderr
+                        )
                 print('Individuals: ', file=sys.stderr)
             for individual in my_parser.families[family].individuals:
                 if verbose:
                     print(my_parser.families[family].individuals[individual], file=sys.stderr)
             if verbose:
-                print('Affected individuals: %s \n' % ','.join(my_parser.families[family].affected_individuals), file=sys.stderr)
+                print('Affected individuals: {0} \n'.format(
+                    ','.join(my_parser.families[family].affected_individuals)
+                        ), 
+                        file=sys.stderr
+                    )
     
 
 if __name__ == '__main__':
