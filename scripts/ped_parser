@@ -16,18 +16,16 @@ import sys
 import os
 import click
 import json
+import logging
 
-from pprint import pprint as pp
 from datetime import datetime
 
-from codecs import getwriter, open
+from codecs import open
 
 import pkg_resources
 import ped_parser
 from ped_parser import FamilyParser
-
-if sys.version_info < (3,0):
-    sys.stdout = getwriter('UTF-8')(sys.stdout)
+from ped_parser.log import init_log
 
 version = pkg_resources.require("ped_parser")[0].version
 
@@ -86,21 +84,41 @@ def print_version(ctx, param, value):
                 expose_value=False,
                 is_eager=True
 )
-def ped_parser(family_file, family_type, outfile, to_json, to_madeline, 
-                to_ped, verbose):
+@click.option('-l', '--logfile',
+                    type=click.Path(exists=False),
+                    help="Path to log file. If none logging is "\
+                          "printed to stderr."
+)
+@click.option('--loglevel',
+                    type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR',
+                                        'CRITICAL']),
+                    help="Set the level of log output."
+)
+def cli(family_file, family_type, outfile, to_json, to_madeline, 
+                to_ped, verbose, logfile, loglevel):
     """Tool for parsing ped files.\n
         Default is to prints the family file to in ped format to output. 
         For more information, please see github.com/moonso/ped_parser.
     """
-    my_parser = FamilyParser(family_file, family_type, verbose)
+
+    if not loglevel:
+        if verbose:
+            loglevel = 'INFO'
+        else:
+            loglevel = 'WARNING'
+
+    # Setup the logging environment
+    logger = ped_parser.logger
+    init_log(logger, logfile, loglevel)
+
+    my_parser = FamilyParser(family_file, family_type)
+
     start = datetime.now()
-    if verbose:
-        print('Families found in file: {0}'.format(
+    logger.info('Families found in file: {0}'.format(
                     ','.join(list(my_parser.families.keys()))
-                    ), 
-                    file=sys.stderr
+                    ) 
                 )
-    
+
     if to_json:
         json_output = my_parser.to_json(outfile)
     elif to_madeline:
@@ -110,25 +128,20 @@ def ped_parser(family_file, family_type, outfile, to_json, to_madeline,
     else:
         # If no specific output is choosen, write a summary about the families to screen
         for family in my_parser.families:
-            if verbose:
-                print('Fam: %s' % family, file=sys.stderr)
-                if family_type in ['cmms', 'mip']:
-                    print('Expected Inheritance Models: {0}'.format(
-                                my_parser.families[family].models_of_inheritance
-                                ), 
-                                file=sys.stderr
+            logger.info('Fam: {0}'.format(family))
+            if family_type in ['cmms', 'mip']:
+                logger.info('Expected Inheritance Models: {0}'.format(
+                            my_parser.families[family].models_of_inheritance
+                            ) 
                         )
-                print('Individuals: ', file=sys.stderr)
+            logger.info('Individuals: ')
             for individual in my_parser.families[family].individuals:
-                if verbose:
-                    print(my_parser.families[family].individuals[individual], file=sys.stderr)
-            if verbose:
-                print('Affected individuals: {0} \n'.format(
+                logger.info(my_parser.families[family].individuals[individual])
+            logger.info('Affected individuals: {0} \n'.format(
                     ','.join(my_parser.families[family].affected_individuals)
-                        ), 
-                        file=sys.stderr
+                        )
                     )
     
 
 if __name__ == '__main__':
-    ped_parser()
+    cli()
