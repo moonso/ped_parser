@@ -28,12 +28,19 @@ from __future__ import print_function, unicode_literals
 
 import sys
 import os
+import logging
 import click
+
+from ped_parser.exceptions import PedigreeError
 
 class Family(object):
     """Base class for the family parsers."""
-    def __init__(self, family_id, individuals = {}, models_of_inheritance=set([])):
+    def __init__(self, family_id, individuals = {}, models_of_inheritance=set([]),
+                logger=None, logfile=None, loglevel=None):
         super(Family, self).__init__()
+        
+        self.logger = logging.getLogger(__name__)
+        
          # This is a dict with individual objects
         self.individuals = individuals
         self.family_id = family_id
@@ -45,34 +52,48 @@ class Family(object):
         self.affected_individuals = set() # Set of affected individual id:s
     
     def family_check(self):
-        """Check if the family members break the structure of the family in any way, eg. nonexistent parent, 
-            wrong sex on parent... Also extracts all trios found, this i of help for many at the moment since 
-            GATK can only do phasing of trios and duos."""
+        """
+        Check if the family members break the structure of the family. 
+        eg. nonexistent parent, wrong sex on parent etc. 
+        Also extracts all trios found, this is of help for many at the moment 
+        since GATK can only do phasing of trios and duos."""
         #TODO Make some tests for these
-        for individual in self.individuals:
+        self.logger.info("Checking family relations for {0}".format(
+            self.family_id)
+        )
+        for individual_id in self.individuals:
+            self.logger.debug("Checking individual {0}".format(individual_id))
+            individual = self.individuals[individual_id]
+            if individual.affected:
+                self.logger.debug("Found affected individuals {0}".format(
+                    individual_id)
+                )
+                self.affected_individuals.add(individual_id)
             
-            if self.individuals[individual].affected:
-                self.affected_individuals.add(individual)
+            father = individual.father
+            mother = individual.mother
             
-            father = self.individuals[individual].father
-            mother = self.individuals[individual].mother
-            if self.individuals[individual].has_parents:
+            if individual.has_parents:
                 self.no_relations = False
-                self.check_parent(father, father=True)
-                self.check_parent(mother, father=False)
+                try:
+                    self.check_parent(father, father=True)
+                    self.check_parent(mother, father=False)
+                except PedigreeError as e:
+                    self.logger.error(e.message)
+                    raise e
                 # Check if there is a trio
-                if self.individuals[individual].has_both_parents:
-                    self.trios.append(set([individual, father, mother]))
+                if individual.has_both_parents:
+                    self.trios.append(set([individual_id, father, mother]))
                 elif father != '0':
-                    self.duos.append(set([individual, father]))
+                    self.duos.append(set([individual_id, father]))
                 else:
-                    self.duos.append(set([individual, mother]))
+                    self.duos.append(set([individual_id, mother]))
                 # self.check_grandparents(individual)
             # Annotate siblings:
-            for individual_2 in self.individuals:
-                if individual != individual_2:
-                    if self.check_siblings(individual, individual_2):
-                        self.individuals[individual].siblings.add(individual_2)
+            for individual_2_id in self.individuals:
+                if individual_id != individual_2_id:
+                    if self.check_siblings(individual_id, individual_2_id):
+                        individual.siblings.add(individual_2_id)
     
     def check_parent(self, parent_id, father = False):
         """Check if the parent info is correct. If an individual is not present in file raise exeption.
@@ -87,28 +108,31 @@ class Family(object):
         
         if parent_id != '0':
             if parent_id not in self.individuals:
-                raise SyntaxError('Parent %s is not in family.' % parent_id)
+                raise PedigreeError(self.family_id, parent_id, 
+                                    'Parent is not in family.')
             if father:
                 if self.individuals[parent_id].sex != 1:
-                    raise SyntaxError('Father %s is not specified as male.' % parent_id)
+                    raise PedigreeError(self.family_id, parent_id, 
+                                        'Father is not specified as male.')
             else:
                 if self.individuals[parent_id].sex != 2:
-                    raise SyntaxError('Mother %s is not specified as female.' % parent_id)
+                    raise PedigreeError(self.family_id, parent_id, 
+                                        'Mother is not specified as female.')
         return
     
-    def check_siblings(self, individual_1, individual_2):
+    def check_siblings(self, individual_1_id, individual_2_id):
         """Check if two family members that are siblings.
             
-            Input: Two individual id:s (individual_1, individual_2)
+            Input: Two individual id:s (individual_1_id, individual_2_id)
             
             Returns: True if the individuals are related
                      False if they are not related
         """
         
-        if ((self.individuals[individual_1].father != '0' and 
-                self.individuals[individual_1].father == self.individuals[individual_2].father) or 
-            (self.individuals[individual_2].mother != '0' and 
-                self.individuals[individual_1].mother == self.individuals[individual_2].mother)):
+        ind_1 = self.individuals[individual_1_id]
+        ind_2 = self.individuals[individual_2_id]
+        if ((ind_1.father != '0' and ind_1.father == ind_2.father) or 
+            (ind_1.mother != '0' and ind_1.mother == ind_2.mother)):
             return True
         else:
             return False
@@ -133,11 +157,9 @@ class Family(object):
                 Adds the individual object to the family.
         """
         if individual_object.family != self.family_id:
-            print("Family id of individual is not the same as family id for "
-                    "Family object!", file=sys.stderr)
-            print("Family id of individual:{0} Family id for Family object:"\
-                    "{1}".format(individual_object.family, self.family_id), 
-                        file=sys.stderr)
+            raise PedigreeError(self.family, individual_object.individual_id,
+                "Family id of individual is not the same as family id for "\
+                                    "Family object!")
         else:
             self.individuals[individual_object.individual_id] = individual_object
         return
@@ -147,6 +169,7 @@ class Family(object):
         phenotype = 0 # This is if unknown phenotype
         if individual_id in self.individuals:
             phenotype = self.individuals[individual_id].phenotype
+        
         return phenotype
     
     def get_trios(self):
