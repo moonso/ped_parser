@@ -24,9 +24,10 @@ import os
 from tempfile import NamedTemporaryFile
 import pytest
 from ped_parser import parser
+from ped_parser.exceptions import WrongLineFormat
 
 
-class TestIndividual(object):
+class TestTrio(object):
     """Test class for testing how the individual class behave"""
     
     def setup_class(self):
@@ -45,8 +46,8 @@ class TestIndividual(object):
     
     def test_standard_trio_proband_extra_column(self):
         """Test if the file is parsed in a correct way."""
-        with pytest.raises(SystemExit):
-            family_parser = parser.FamilyParser(self.trio_file.name)
+        with pytest.raises(WrongLineFormat):
+            family_parser = parser.FamilyParser(open(self.trio_file.name))
 
 
 def main():

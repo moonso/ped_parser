@@ -22,16 +22,16 @@ import os
 from tempfile import NamedTemporaryFile
 import pytest
 from ped_parser import parser
+from ped_parser.exceptions import PedigreeError
 
-
-class TestIndividual(object):
+class TestTrio(object):
     """Test class for testing how the individual class behave"""
     
     def setup_class(self):
         """Setup a standard trio with extra column in the 'proband' row."""
         trio_lines = ['#Standard trio\n', 
                     '#FamilyID\tSampleID\tFather\tMother\tSex\tPhenotype\n', 
-                    'healthyParentsAffectedSon\tproband\tfather\tmother\t1\n',
+                    'healthyParentsAffectedSon\tproband\tfather\tmother\t1\t2\n',
                     'healthyParentsAffectedSon\tmother\t0\t0\t1\t1\n', 
                     'healthyParentsAffectedSon\tfather\t0\t0\t2\t1\n'
                     ]
@@ -43,8 +43,8 @@ class TestIndividual(object):
     
     def test_standard_trio_proband_missing_column(self):
         """Test if the file is parsed in a correct way."""
-        with pytest.raises(SystemExit):
-            family_parser = parser.FamilyParser(self.trio_file.name)
+        with pytest.raises(PedigreeError):
+            family_parser = parser.FamilyParser(open(self.trio_file.name, 'r'))
 
 
 def main():
