@@ -45,8 +45,6 @@ Copyright (c) 2013 __MoonsoInc__. All rights reserved.
 
 from __future__ import print_function, unicode_literals
 
-import sys
-import os
 import json
 import logging
 import click
@@ -471,9 +469,9 @@ class FamilyParser(object):
         return families
             
         
-    def to_json(self, outfile):
+    def to_json(self):
         """
-        Print the information from the pedigree file as a json like object.
+        Yield the information from the pedigree file as a json object.
         This is a list with lists that represents families, families have
         dictionaries that represents individuals like
             [ 
@@ -496,23 +494,21 @@ class FamilyParser(object):
             ]
         This object can easily be converted to a json object.
         
-        Arguments:
-          outfile (str): The path to a file
+        Yields:
+          the information in json format
         """
         json_families = []
         for family_id in self.families:
             json_families.append(self.families[family_id].to_json())
         
-        if outfile:
-            outfile.write(json.dumps(json_families))
-        else: 
-            print(json.dumps(json_families))
-        return
+        return json.dumps(json_families)
     
-    def to_madeline(self, outfile=None):
+    def to_madeline(self):
         """
-        Produce output in madeline format. If no outfile is given print to 
-        screen.
+        Return a generator with the info in madeline format.
+        
+        Yields:
+            An iterator with family info in madeline format
         """
         
         madeline_header = [
@@ -526,24 +522,21 @@ class FamilyParser(object):
             'Consultand',
             'Alive'
         ]
-        if outfile:
-            outfile.write('\t'.join(madeline_header) + '\n')
-        else:
-            print('\t'.join(madeline_header))
+        
+        yield '\t'.join(madeline_header)
         
         for family_id in self.families:
             for individual_id in self.families[family_id].individuals:
                 individual = self.families[family_id].individuals[individual_id]
-                if outfile:
-                    outfile.write(individual.to_madeline()+'\n')
-                else:
-                    print(individual.to_madeline())
-        return 
+                
+                yield individual.to_madeline()
     
-    def to_ped(self, outfile=None):
+    def to_ped(self):
         """
-        Produce output in ped format. If no outfile is given print to 
-        screen.
+        Return a generator with the info in ped format.
+        
+        Yields:
+            An iterator with the family info in ped format
         """
         
         ped_header = [
@@ -573,10 +566,9 @@ class FamilyParser(object):
             ', '.join(ped_header)
         ))
         
-        if outfile:
-            outfile.write('\t'.join(ped_header)+'\n')
-        else:
-            print('\t'.join(ped_header))
+        
+        
+        yield '\t'.join(ped_header)
         
         for family_id in self.families:
             for individual_id in self.families[family_id].individuals:
@@ -593,12 +585,7 @@ class FamilyParser(object):
                     for header in ped_header[6:]:
                         ped_info.append(individual['extra_info'].get(header, '.'))
             
-                if outfile:
-                    outfile.write('\t'.join(ped_info)+'\n')
-                else:
-                    print('\t'.join(ped_info))
-                
-        return 
+                yield '\t'.join(ped_info)
     
 
 @click.command()
@@ -650,11 +637,24 @@ def cli(family_file, family_type, to_json, to_madeline, to_ped, to_dict,
     my_parser = FamilyParser(family_file, family_type)
     
     if to_json:
-        my_parser.to_json(outfile)
+        if outfile:
+            outfile.write(my_parser.to_json())
+        else:
+            print(my_parser.to_json())
     elif to_madeline:
-        my_parser.to_madeline(outfile)
+        for line in my_parser.to_madeline():
+            if outfile:
+                outfile.write(line + '\n')
+            else:
+                print(line)
+            
     elif to_ped:
-        my_parser.to_ped(outfile)
+        for line in my_parser.to_ped():
+            if outfile:
+                outfile.write(line + '\n')
+            else:
+                print(line)
+            
     elif to_dict:
         pp(my_parser.to_dict())
     
