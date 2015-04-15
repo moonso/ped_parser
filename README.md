@@ -6,6 +6,11 @@ The parser will create a family object for each family found in the pedigree fil
 The tool can be used to access information from ped files or convert the data to [madeline2](http://eyegene.ophthy.med.umich.edu/madeline/index.php) format for drawing pedigree trees.
 Also it is possible to create family objects and individual object and print the in ped and madeline formats.
 
+## Installation ##
+
+    pip install ped_parser
+
+
 ## General ##
 
 Parse a file with family info, this can be a .ped file, a .fam, a .txt(alternative ped style) 
@@ -41,10 +46,6 @@ A proband is the first affected member of a pedigree coming to medical attention
 A consultand is an individual who has sought genetic counseling or testing.
 ```Consultand - 'Yes', 'No', 'Unknown' or '.'```
 ```Alive - 'Yes', 'No', 'Unknown' or '.'```
-
-## Installation ##
-
-    pip install ped_parser
 
 ##Usage##
 
