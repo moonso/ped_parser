@@ -20,12 +20,11 @@ Created by Måns Magnusson on 2012-10-31.
 Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 """
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
+from __future__ import print_function, unicode_literals
 
 import sys
 import os
+import logging
 
 
 class Individual(object):
@@ -34,11 +33,16 @@ class Individual(object):
         genetic_models=None, proband='.', consultand='.', alive='.'):
         
         #TODO write test to throw exceptions if malformed input.
-        
+        self.logger = logging.getLogger(__name__)
+        self.logger.info("Creating individual")
         self.individual_id = ind #Individual Id STRING
+        self.logger.info("Individual id: {0}".format(self.individual_id))
         self.family = family #Family Id STRING
+        self.logger.info("Family id: {0}".format(self.family))
         self.mother = mother #Mother Id STRING
+        self.logger.info("Mother id: {0}".format(self.mother))
         self.father = father # Father Id STRING
+        self.logger.info("Father id: {0}".format(self.father))
         
         self.affected = False
         self.healthy = False
@@ -46,12 +50,17 @@ class Individual(object):
         
         # For madeline:
         self.proband = proband
+        self.logger.info("Proband: {0}".format(self.proband))
         self.consultand = consultand
+        self.logger.info("Consultand: {0}".format(self.consultand))
         self.alive = alive
+        self.logger.info("Alive: {0}".format(self.alive))
         
         try:
             self.sex = int(sex) # Sex Integer
+            self.logger.info("Sex: {0}".format(self.sex))
             self.phenotype = int(phenotype) # Phenotype INTEGER 
+            self.logger.info("Phenotype: {0}".format(self.phenotype))
         except ValueError:
             raise SyntaxError('Sex and phenotype have to be integers.')
             
@@ -65,10 +74,11 @@ class Individual(object):
         elif self.father != '0':
             self.has_parents = True
         
+        self.logger.info("Individual has parents: {0}".format(self.has_parents))
         # These features will be added
         #TODO make use of family relations:
         self.siblings = set()
-        self.grandparents = set()
+        self.grandparents = dict()
         self.first_cousins = set()
         self.second_cousins = set()
         
@@ -78,7 +88,17 @@ class Individual(object):
             self.healthy = True
             
     def check_grandparents(self, mother = None, father = None):
-        """Check if there are any grand parents."""
+        """
+        Check if there are any grand parents.
+        
+        Set the grandparents id:s
+        
+        Arguments:
+            mother (Individual): An Individual object that represents the mother
+            father (Individual): An Individual object that represents the father
+        
+        
+        """
         if mother:
             if mother.mother != '0':
                 self.grandparents[mother.mother] =  ''
@@ -91,28 +111,28 @@ class Individual(object):
                 self.grandparents[father.father] = ''
         return
     
-    def get_ped(self):
-        """Return the individual info in a ped formatted string."""
-        return "{0}\t{1}\t{2}\t{3}\t{4}\t{5}".format(
-            self.family, self.individual_id, self.father, self.mother,
-            self.sex, self.phenotype
-        )
-    
-    def get_json(self):
-        """Return the individual info in a dictionary for json."""
+    def to_json(self):
+        """
+        Return the individual info in a dictionary for json.
+        """
+        self.logger.info("Returning json info")
         individual_info = {
             'family_id': self.family,
             'id':self.individual_id, 
             'sex':str(self.sex), 
             'phenotype': str(self.phenotype), 
             'mother': self.mother, 
-            'father': self.father
+            'father': self.father,
+            'extra_info': self.extra_info
         }
         return individual_info
     
-    def get_madeline(self):
-        """Return the individual info in a madeline formated string"""
+    def to_madeline(self):
+        """
+        Return the individual info in a madeline formated string
+        """
         #Convert sex to madeleine type
+        self.logger.info("Returning madeline info")
         if self.sex == 1:
             madeline_gender = 'M'
         elif self.sex == 2:
@@ -142,6 +162,7 @@ class Individual(object):
             madeline_father, madeline_mother, madeline_phenotype,
             self.proband, self.consultand, self.alive
         )
+    
     def __repr__(self):
         return "Individual(individual_id={0}, family={1}, mother={2}, " \
                 "father={3}, sex={4}, phenotype={5})".format(
@@ -150,7 +171,6 @@ class Individual(object):
                 )
     
     def __str__(self):
-        """Returns what should be printed if object is printed."""
         ind_info = ['ind_id:', self.individual_id, 
                     'family:', self.family, 
                     'mother:', self.mother, 

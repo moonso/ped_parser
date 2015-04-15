@@ -23,7 +23,7 @@ from tempfile import NamedTemporaryFile
 from ped_parser import parser
 
 
-class TestIndividual(object):
+class TestTrio(object):
     """Test class for testing how the individual class behave"""
     
     def setup_class(self):
@@ -42,7 +42,7 @@ class TestIndividual(object):
     
     def test_standard_trio(self):
         """Test if the file is parsed in a correct way."""
-        family_parser = parser.FamilyParser(self.trio_file.name)
+        family_parser = parser.FamilyParser(open(self.trio_file.name, 'r'))
         assert family_parser.header == [
                                     'family_id', 
                                     'sample_id', 

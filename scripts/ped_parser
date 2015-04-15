@@ -15,8 +15,6 @@ from __future__ import unicode_literals
 import sys
 import os
 import click
-import json
-import logging
 
 from datetime import datetime
 
@@ -24,8 +22,7 @@ from codecs import open
 
 import pkg_resources
 import ped_parser
-from ped_parser import FamilyParser
-from ped_parser.log import init_log
+from ped_parser import FamilyParser, init_log, logger
 
 version = pkg_resources.require("ped_parser")[0].version
 
@@ -108,7 +105,6 @@ def cli(family_file, family_type, outfile, to_json, to_madeline,
             loglevel = 'WARNING'
 
     # Setup the logging environment
-    logger = ped_parser.logger
     init_log(logger, logfile, loglevel)
 
     my_parser = FamilyParser(family_file, family_type)
