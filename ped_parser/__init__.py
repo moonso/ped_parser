@@ -7,3 +7,4 @@ from ped_parser.parser import FamilyParser
 from ped_parser.log import init_log
 
 logger = logging.getLogger(__name__)
+__version__ = '1.6.1'
