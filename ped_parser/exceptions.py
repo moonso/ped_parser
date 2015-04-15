@@ -68,3 +68,19 @@ class PedigreeError(Exception):
     def __str__(self):
         return self.message
 
+class WrongLineFormat(Exception):
+    """Error inconcistenies in ped line"""
+    def __init__(self, message="", ped_line=""):
+        """
+        Arguments:
+            message (str): A string with error message
+            ped_line (str): The wrong formatted line
+        """
+        super(WrongLineFormat, self).__init__()
+        self.message = message
+        self.ped_line = ped_line
+
+    def __str__(self):
+        return self.message
+
+

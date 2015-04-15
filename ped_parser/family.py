@@ -12,13 +12,6 @@ Attributes:
 individuals DICT dictionary with family members on the form {<ind_id>:<Individual_obj>}
 variants DICT dictionary with all the variants that exists in the family on the form {<var_id>:<Variant_obj>}
 
-    
-Methods:
-
-    - print_individuals
-    - print_all_variants
-    - add_variant(attach a variant objekt and also a variant id to individuals)
-
 
 Created by Måns Magnusson on 2014-02-05.
 Copyright (c) 2014 __MyCompanyName__. All rights reserved.
@@ -38,14 +31,20 @@ class Family(object):
     def __init__(self, family_id, individuals = {}, models_of_inheritance=set([]),
                 logger=None, logfile=None, loglevel=None):
         super(Family, self).__init__()
-        
         self.logger = logging.getLogger(__name__)
-        
+
+        self.family_id = family_id
+        self.logger.info("Initiating family with id:{0}".format(self.family_id))
          # This is a dict with individual objects
         self.individuals = individuals
-        self.family_id = family_id
+        self.logger.info("Adding individuals:{0}".format(
+            ','.join([ind for ind in self.individuals])
+        ))
         # List of models of inheritance that should be prioritized.
         self.models_of_inheritance = models_of_inheritance 
+        self.logger.info("Adding models of inheritance:{0}".format(
+            ','.join(self.models_of_inheritance)
+        ))
         self.trios = [] #Trios are a list of sets with trios.
         self.duos = [] #Duos are a list of sets with trios.
         self.no_relations = True
@@ -64,8 +63,10 @@ class Family(object):
         for individual_id in self.individuals:
             self.logger.debug("Checking individual {0}".format(individual_id))
             individual = self.individuals[individual_id]
+            self.logger.debug("Checking if individual {0} is affected".format(
+                individual_id))
             if individual.affected:
-                self.logger.debug("Found affected individuals {0}".format(
+                self.logger.debug("Found affected individual {0}".format(
                     individual_id)
                 )
                 self.affected_individuals.add(individual_id)
@@ -74,6 +75,8 @@ class Family(object):
             mother = individual.mother
             
             if individual.has_parents:
+                self.logger.debug("Individual {0} has parents".format(
+                    individual_id))
                 self.no_relations = False
                 try:
                     self.check_parent(father, father=True)
@@ -94,6 +97,8 @@ class Family(object):
                 if individual_id != individual_2_id:
                     if self.check_siblings(individual_id, individual_2_id):
                         individual.siblings.add(individual_2_id)
+                    # elif self.check_cousins(individual_id, individual_2_id):
+                    #     individual.cousins.add(individual_2_id)
     
     def check_parent(self, parent_id, father = False):
         """Check if the parent info is correct. If an individual is not present in file raise exeption.
@@ -105,7 +110,7 @@ class Family(object):
                     The parent id is not present
                     The gender of the parent is wrong.
         """
-        
+        self.logger.info("Checking parent {0}".format(parent_id))
         if parent_id != '0':
             if parent_id not in self.individuals:
                 raise PedigreeError(self.family_id, parent_id, 
@@ -121,14 +126,21 @@ class Family(object):
         return
     
     def check_siblings(self, individual_1_id, individual_2_id):
-        """Check if two family members that are siblings.
-            
-            Input: Two individual id:s (individual_1_id, individual_2_id)
-            
-            Returns: True if the individuals are related
-                     False if they are not related
+        """
+        Check if two family members that are siblings.
+        
+        Arguments: 
+            individual_1_id (str): The id of an individual
+            individual_2_id (str): The id of an individual
+        
+        Returns: 
+            bool : True if the individuals are siblings
+                   False if they are not siblings
         """
         
+        self.logger.info("Checking if {0} and {1} are siblings".format(
+            individual_1_id, individual_2_id
+        ))
         ind_1 = self.individuals[individual_1_id]
         ind_2 = self.individuals[individual_2_id]
         if ((ind_1.father != '0' and ind_1.father == ind_2.father) or 
@@ -137,35 +149,62 @@ class Family(object):
         else:
             return False
     
-    def check_cousins(self, individual_1, individual_2):
-        """Check which family members that are cousins. 
-            If two individuals share any grandparents they are cousins.
-            
-            Input: Two individuals
-            
-            Returns: True if they share any grandparents
-                     False if not.
+    def check_cousins(self, individual_1_id, individual_2_id):
         """
+        Check if two family members are cousins.
+        
+        If two individuals share any grandparents they are cousins.
+        
+        Arguments: 
+            individual_1_id (str): The id of an individual
+            individual_2_id (str): The id of an individual
+        
+        Returns: 
+            bool : True if the individuals are cousins
+                   False if they are not cousins
+        
+        """
+        self.logger.info("Checking if {0} and {1} are cousins".format(
+            individual_1_id, individual_2_id
+        ))
+        
         #TODO check if any of the parents are siblings
         pass
     
     def add_individual(self, individual_object):
-        """Add an individual to the family.
-            
-            Input: An individual object
-                
-                Adds the individual object to the family.
         """
-        if individual_object.family != self.family_id:
+        Add an individual to the family.
+        
+        Arguments:
+            individual_object (Individual)
+            
+        """
+        ind_id = individual_object.individual_id
+        self.logger.info("Trying to add {0}".format(ind_id))
+        family_id = individual_object.family
+        if family_id != self.family_id:
             raise PedigreeError(self.family, individual_object.individual_id,
                 "Family id of individual is not the same as family id for "\
                                     "Family object!")
         else:
-            self.individuals[individual_object.individual_id] = individual_object
+            self.individuals[ind_id] = individual_object
+            self.logger.info("Added individual {0} to family {1}".format(
+                ind_id, family_id
+            ))
         return
     
     def get_phenotype(self, individual_id):
-        """Return the phenotype of an individual or 0 if nonexisting individual."""
+        """
+        Return the phenotype of an individual
+        
+        If individual does not exist return 0
+        
+        Arguments:
+            individual_id (str): Represents the individual id
+        
+        Returns:
+            int : Integer that represents the phenotype
+        """
         phenotype = 0 # This is if unknown phenotype
         if individual_id in self.individuals:
             phenotype = self.individuals[individual_id].phenotype
@@ -173,17 +212,81 @@ class Family(object):
         return phenotype
     
     def get_trios(self):
-        """Print the trios found as pedigree files"""
+        """
+        Return the trios found in family
+        """
         return self.trios
     
+    def to_json(self):
+        """
+        Return the family in json format.
+        
+        The family will be represented as a list with dictionarys that
+        holds information for the individuals.
+        
+        Returns:
+            list : A list with dictionaries
+        """
+        
+        return [self.individuals[ind].to_json() for ind in self.individuals]
+    
     def to_ped(self, outfile=None):
-        """Print the individuals of the family in ped format"""
-        for individual in self.individuals:
-            ped_line = self.individuals[individual].get_ped()
+        """
+        Print the individuals of the family in ped format
+        
+        The header will be the original ped header plus all headers found in
+        extra info of the individuals
+        """
+        
+        ped_header = [
+            '#FamilyID',
+            'IndividualID',
+            'PaternalID',
+            'MaternalID', 
+            'Sex',
+            'Phenotype',
+        ]
+        
+        extra_headers = [
+            'InheritanceModel',
+            'Proband',
+            'Consultand',
+            'Alive'
+        ]
+        
+        for individual_id in self.individuals:
+            individual = self.individuals[individual_id]
+            for info in individual.extra_info:
+                if info in extra_headers:
+                    if info not in ped_header:
+                        ped_header.append(info)
+        
+        self.logger.info("Ped headers found: {0}".format(
+            ', '.join(ped_header)
+        ))
+        
+        if outfile:
+            outfile.write('\t'.join(ped_header)+'\n')
+        else:
+            print('\t'.join(ped_header))
+        
+        for individual in self.to_json():
+            ped_info = []
+            ped_info.append(individual['family_id'])
+            ped_info.append(individual['id'])
+            ped_info.append(individual['father'])
+            ped_info.append(individual['mother'])
+            ped_info.append(individual['sex'])
+            ped_info.append(individual['phenotype'])
+            
+            if len(ped_header) > 6:
+                for header in ped_header[6:]:
+                    ped_info.append(individual['extra_info'].get(header, '.'))
+            
             if outfile:
-                outfile.write(ped_line+'\n')
+                outfile.write('\t'.join(ped_info)+'\n')
             else:
-                print(ped_line)
+                print('\t'.join(ped_info))
     
     def __repr__(self):
         return "Family(family_id={0}, individuals={1}, " \
@@ -206,6 +309,7 @@ def cli(outfile):
     proband = Individual('proband', family='1', mother='mother', father='father',sex='1',phenotype='2')
     mother = Individual('mother', family='1', mother='0', father='0',sex='2',phenotype='1')
     father = Individual('father', family='1', mother='0', father='0',sex='1',phenotype='1')
+    proband.extra_info['Proband'] = 'Yes'
     my_family = Family(family_id='1')
     my_family.add_individual(proband)
     my_family.add_individual(mother)
@@ -215,4 +319,7 @@ def cli(outfile):
 
 
 if __name__ == '__main__':
+    from ped_parser import logger
+    from ped_parser import init_log
+    init_log(logger, loglevel="DEBUG")
     cli()

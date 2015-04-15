@@ -55,7 +55,7 @@ from string import whitespace
 from ped_parser import (Individual, Family)
 from ped_parser.log import init_log
 from ped_parser.exceptions import (WrongAffectionStatus, WrongPhenotype,
-                                    WrongGender)
+                                    WrongGender, PedigreeError, WrongLineFormat)
 
 
 ############### Names of genetic models ###############
@@ -79,7 +79,10 @@ class FamilyParser(object):
     def __init__(self, family_info, family_type = 'ped'):
         super(FamilyParser, self).__init__()
         
-        self.logger = logging.getLogger(__name__)
+        if __name__ == "__main__":
+            self.logger = logging.getLogger("ped_parser.FamilyParser")
+        else:
+            self.logger = logging.getLogger(__name__)
         
         self.logger.info("Initializing family parser")
         
@@ -168,29 +171,39 @@ class FamilyParser(object):
             alive = '.'
         
         individual = Individual(
-                                        sample_id, 
-                                        family_id, 
-                                        mother_id, 
-                                        father_id, 
-                                        sex, 
-                                        phenotype, 
-                                        genetic_models, 
-                                        proband, 
-                                        consultand, 
-                                        alive
-                                    )
+                                 sample_id, 
+                                 family_id, 
+                                 mother_id, 
+                                 father_id, 
+                                 sex, 
+                                 phenotype, 
+                                 genetic_models, 
+                                 proband, 
+                                 consultand, 
+                                 alive
+                              )
         
         return individual
     
     def check_line_length(self, splitted_line, expected_length):
-        """Check if the line is correctly formated. Throw a SyntaxError if it is not."""
+        """
+        Check if the line is correctly formated. Throw a SyntaxError if it is not.
+        """
         if len(splitted_line) != expected_length:
-            raise SyntaxError('\nWRONG FORMATED PED LINE!\n')
+            raise WrongLineFormat(
+                            message='WRONG FORMATED PED LINE!',
+                            ped_line = '\t'.join(splitted_line))
         return
     
     def ped_parser(self, family_info):
         """
-        Parse a .ped formatted family info.
+        Parse .ped formatted family info.
+        
+        Add all family info to the parser object
+        
+        Arguments:
+            family_info (iterator): An iterator with family info
+        
         """
         
         for line in family_info:
@@ -202,10 +215,9 @@ class FamilyParser(object):
                     splitted_line = line.rstrip().split()
                 try:
                     self.check_line_length(splitted_line, 6)
-                except SyntaxError as e:
-                    self.logger.error("One of the ped lines have {0} number "\
-                            "of entrys:\n{1}".format(len(splitted_line), line),
-                            exec_info = True)
+                except WrongLineFormat as e:
+                    self.logger.error(e)
+                    self.logger.info("Ped line: {0}".format(e.ped_line))
                     raise e
                 
                 sample_dict = dict(zip(self.header, splitted_line))
@@ -221,9 +233,16 @@ class FamilyParser(object):
 
     def alternative_parser(self, family_file):
         """
-        This parses a ped file with more than six columns, in that case header
-        comlumn must exist and each row must have the same amount of columns 
-        as the header. First six columns must be the same as in the ped format.
+        Parse alternative formatted family info
+        
+        This parses a information with more than six columns. 
+        For alternative information header comlumn must exist and each row 
+        must have the same amount of columns as the header. 
+        First six columns must be the same as in the ped format.
+        
+        Arguments:
+            family_info (iterator): An iterator with family info
+        
         """
         
         alternative_header = None
@@ -231,11 +250,11 @@ class FamilyParser(object):
         for line in family_file:
             if line.startswith('#'):
                 alternative_header = line[1:].rstrip().split('\t')
-            elif not all(c in whitespace for c in line.rstrip()):
+                self.logger.info("Alternative header found: {0}".format(line))
+            elif line.strip():
                 if not alternative_header:
-                    self.logger.error("Alternative ped files must have "\
+                    raise WrongLineFormat(message="Alternative ped files must have "\
                                         "headers! Please add a header line.")
-                    raise SyntaxError
                 
                 splitted_line = line.rstrip().split('\t')
                 if len(splitted_line) < 6:
@@ -482,12 +501,7 @@ class FamilyParser(object):
         """
         json_families = []
         for family_id in self.families:
-            family = []
-            for individual_id in self.families[family_id].individuals:
-                individual = self.families[family_id].individuals[individual_id]
-                family.append(individual.get_json())
-                
-            json_families.append(family)
+            json_families.append(self.families[family_id].to_json())
         
         if outfile:
             outfile.write(json.dumps(json_families))
@@ -521,9 +535,9 @@ class FamilyParser(object):
             for individual_id in self.families[family_id].individuals:
                 individual = self.families[family_id].individuals[individual_id]
                 if outfile:
-                    outfile.write(individual.get_madeline()+'\n')
+                    outfile.write(individual.to_madeline()+'\n')
                 else:
-                    print(individual.get_madeline())
+                    print(individual.to_madeline())
         return 
     
     def to_ped(self, outfile=None):
@@ -533,25 +547,57 @@ class FamilyParser(object):
         """
         
         ped_header = [
-            '#FamilyID', 
-            'IndividualID', 
-            'PaternalID', 
+            '#FamilyID',
+            'IndividualID',
+            'PaternalID',
             'MaternalID', 
-            'Sex', 
+            'Sex',
             'Phenotype',
         ]
+        
+        extra_headers = [
+            'InheritanceModel',
+            'Proband',
+            'Consultand',
+            'Alive'
+        ]
+        
+        for individual_id in self.individuals:
+            individual = self.individuals[individual_id]
+            for info in individual.extra_info:
+                if info in extra_headers:
+                    if info not in ped_header:
+                        ped_header.append(info)
+        
+        self.logger.info("Ped headers found: {0}".format(
+            ', '.join(ped_header)
+        ))
+        
         if outfile:
-            outfile.write('\t'.join(ped_header) + '\n')
+            outfile.write('\t'.join(ped_header)+'\n')
         else:
             print('\t'.join(ped_header))
         
         for family_id in self.families:
             for individual_id in self.families[family_id].individuals:
-                individual = self.families[family_id].individuals[individual_id]
+                individual = self.families[family_id].individuals[individual_id].to_json()
+                ped_info = []
+                ped_info.append(individual['family_id'])
+                ped_info.append(individual['id'])
+                ped_info.append(individual['father'])
+                ped_info.append(individual['mother'])
+                ped_info.append(individual['sex'])
+                ped_info.append(individual['phenotype'])
+            
+                if len(ped_header) > 6:
+                    for header in ped_header[6:]:
+                        ped_info.append(individual['extra_info'].get(header, '.'))
+            
                 if outfile:
-                    outfile.write(individual.get_ped()+'\n')
+                    outfile.write('\t'.join(ped_info)+'\n')
                 else:
-                    print(individual.get_ped())
+                    print('\t'.join(ped_info))
+                
         return 
     
 
@@ -600,13 +646,8 @@ def cli(family_file, family_type, to_json, to_madeline, to_ped, to_dict,
         outfile, logfile, loglevel):
     """Cli for testing the ped parser."""
     from pprint import pprint as pp
-    from ped_parser.log import init_log
     
-    logger = logger.getLogger('ped_parser')
-    init_log(logger, logfile, loglevel)
-    
-    my_parser = FamilyParser(family_file, family_type, logfile=logfile, 
-                            loglevel=loglevel)
+    my_parser = FamilyParser(family_file, family_type)
     
     if to_json:
         my_parser.to_json(outfile)
@@ -621,4 +662,6 @@ def cli(family_file, family_type, to_json, to_madeline, to_ped, to_dict,
 
 
 if __name__ == '__main__':
+    from ped_parser import init_log, logger
+    init_log(logger, loglevel='DEBUG')
     cli()
