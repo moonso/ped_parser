@@ -74,7 +74,15 @@ class FamilyParser(object):
     Parses a iterator with family info and creates a family object with 
     individuals.
     """
-    def __init__(self, family_info, family_type = 'ped'):
+    def __init__(self, family_info, family_type = 'ped', cmms_check=False):
+        """
+        
+        Arguments:
+            family_info (iterator)
+            family_type (str): Any of [ped, alt, cmms, fam, mip]
+            cmms_check (bool, optional): Perform CMMS validations?
+        
+        """
         super(FamilyParser, self).__init__()
         
         if __name__ == "__main__":
@@ -84,6 +92,7 @@ class FamilyParser(object):
         
         self.logger.info("Initializing family parser")
         
+        self.cmms_check = cmms_check
         self.family_type = family_type
         self.logger.info("Family type:{0}".format(family_type))
         self.families = {}
@@ -240,7 +249,6 @@ class FamilyParser(object):
         
         Arguments:
             family_info (iterator): An iterator with family info
-        
         """
         
         alternative_header = None
@@ -300,9 +308,10 @@ class FamilyParser(object):
                         for model in self.get_models(sample_dict['genetic_models']):
                             self.families[ind_object.family].models_of_inheritance.add(model)
                     
-                    # We try is it is an id in the CMMS format:
-                    if len(ind_object.individual_id.split('-')) == 3:
-                        # If the id follow the cmms conventiion we can
+                    # If requested, we try is it is an id in the CMMS format:
+                    sample_id_parts = ind_object.individual_id.split('-')
+                    if self.cmms_check and (len(sample_id_parts) == 3):
+                        # If the id follow the CMMS convention we can
                         # do a sanity check
                         if self.check_cmms_id(ind_object.individual_id):
                             self.logger.info("Id follows CMMS convention: {0}".format(
@@ -314,7 +323,7 @@ class FamilyParser(object):
                             except WrongAffectionStatus as e:
                                 self.logger.error("Wrong affection status for"\
                                 " {0}. Affection status can be in"\
-                                " {1}".format(e.cmms_id, a.valid_statuses))
+                                " {1}".format(e.cmms_id, e.valid_statuses))
                                 raise e
                             except WrongPhenotype as e:
                                 self.logger.error("Affection status for {0} "\
@@ -459,7 +468,7 @@ class FamilyParser(object):
             family = []
             for individual_id in self.families[family_id].individuals:
                 individual = self.families[family_id].individuals[individual_id]
-                family.append(individual.get_json())
+                family.append(individual.to_json())
                 self.logger.debug("Adding individual {0} to family {1}".format(
                     individual_id, family_id
                 ))
