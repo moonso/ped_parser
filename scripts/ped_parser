@@ -55,6 +55,10 @@ def print_version(ctx, param, value):
                     type=click.File('a'),
                     help='Specify the path to a file where results should be stored.'
 )
+@click.option('--cmms_check', 
+                    is_flag=True,
+                    help='If the id is in cmms format.'
+)
 @click.option('--to_json', 
                     is_flag=True,
                     help='Print the ped file in json format.'
@@ -64,6 +68,10 @@ def print_version(ctx, param, value):
                     help='Print the ped file in madeline format.'
 )
 @click.option('--to_ped', 
+                    is_flag=True,
+                    help='Print the ped file in ped format with headers.'
+)
+@click.option('--to_dict', 
                     is_flag=True,
                     help='Print the ped file in ped format with headers.'
 )
@@ -88,12 +96,13 @@ def print_version(ctx, param, value):
                     help="Set the level of log output."
 )
 def cli(family_file, family_type, outfile, to_json, to_madeline, 
-                to_ped, verbose, logfile, loglevel):
+                cmms_check, to_ped, to_dict, verbose, logfile, loglevel):
     """Tool for parsing ped files.\n
         Default is to prints the family file to in ped format to output. 
         For more information, please see github.com/moonso/ped_parser.
     """
-
+    from pprint import pprint as pp
+    
     if not loglevel:
         if verbose:
             loglevel = 'INFO'
@@ -103,7 +112,8 @@ def cli(family_file, family_type, outfile, to_json, to_madeline,
     # Setup the logging environment
     init_log(logger, logfile, loglevel)
 
-    my_parser = FamilyParser(family_file, family_type)
+    my_parser = FamilyParser(family_info=family_file, family_type=family_type, 
+                                    cmms_check=cmms_check)
 
     start = datetime.now()
     logger.info('Families found in file: {0}'.format(
