@@ -10,3 +10,5 @@
 *.tmproj
 *.ipynb
 *.tmp
+htmlcov/
+.coverage

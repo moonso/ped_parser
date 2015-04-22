@@ -229,7 +229,7 @@ class FamilyParser(object):
                 self.families[ind_object.family].add_individual(ind_object)
         
 
-    def alternative_parser(self, family_file):
+    def alternative_parser(self, family_file, cmms_check=False):
         """
         Parse alternative formatted family info
         
@@ -240,7 +240,7 @@ class FamilyParser(object):
         
         Arguments:
             family_info (iterator): An iterator with family info
-        
+            cmms_check (bool, optional): Perform CMMS validations?
         """
         
         alternative_header = None
@@ -300,9 +300,10 @@ class FamilyParser(object):
                         for model in self.get_models(sample_dict['genetic_models']):
                             self.families[ind_object.family].models_of_inheritance.add(model)
                     
-                    # We try is it is an id in the CMMS format:
-                    if len(ind_object.individual_id.split('-')) == 3:
-                        # If the id follow the cmms conventiion we can
+                    # If requested, we try is it is an id in the CMMS format:
+                    sample_id_parts = ind_object.individual_id.split('-')
+                    if cmms_check and (len(sample_id_parts) == 3):
+                        # If the id follow the CMMS convention we can
                         # do a sanity check
                         if self.check_cmms_id(ind_object.individual_id):
                             self.logger.info("Id follows CMMS convention: {0}".format(
@@ -314,7 +315,7 @@ class FamilyParser(object):
                             except WrongAffectionStatus as e:
                                 self.logger.error("Wrong affection status for"\
                                 " {0}. Affection status can be in"\
-                                " {1}".format(e.cmms_id, a.valid_statuses))
+                                " {1}".format(e.cmms_id, e.valid_statuses))
                                 raise e
                             except WrongPhenotype as e:
                                 self.logger.error("Affection status for {0} "\
