@@ -314,7 +314,7 @@ class FamilyParser(object):
                             except WrongAffectionStatus as e:
                                 self.logger.error("Wrong affection status for"\
                                 " {0}. Affection status can be in"\
-                                " {1}".format(e.cmms_id, a.valid_statuses))
+                                " {1}".format(e.cmms_id, e.valid_statuses))
                                 raise e
                             except WrongPhenotype as e:
                                 self.logger.error("Affection status for {0} "\
