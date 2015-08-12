@@ -506,11 +506,11 @@ class FamilyParser(object):
         Yields:
           the information in json format
         """
-        json_families = []
+        #json_families = []
         for family_id in self.families:
-            json_families.append(self.families[family_id].to_json())
-        
-        return json.dumps(json_families)
+            #json_families.append(self.families[family_id].to_json())
+            yield self.families[family_id].to_json()
+        #return json.dumps(json_families)
     
     def to_madeline(self):
         """
