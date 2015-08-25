@@ -1,5 +1,6 @@
-#PEDIGREE PARSER#
+# PEDIGREE PARSER #
 
+[![Build Status](https://travis-ci.org/moonso/ped_parser.svg)](https://travis-ci.org/moonso/ped_parser)
 
 A small tool for parsing files in the [pedigree (.ped) format](http://pngu.mgh.harvard.edu/~purcell/plink/data.shtml#ped).
 The parser will create a family object for each family found in the pedigree file and a individual object for each individual found.
