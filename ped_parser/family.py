@@ -17,7 +17,7 @@ Created by Måns Magnusson on 2014-02-05.
 Copyright (c) 2014 __MyCompanyName__. All rights reserved.
 """
 
-from __future__ import print_function, unicode_literals
+from __future__ import print_function
 
 import sys
 import os
@@ -32,39 +32,53 @@ class Family(object):
                 logger=None, logfile=None, loglevel=None):
         super(Family, self).__init__()
         self.logger = logging.getLogger(__name__)
-
+        # Each family needs to have a family id
         self.family_id = family_id
         self.logger.info("Initiating family with id:{0}".format(self.family_id))
+        
          # This is a dict with individual objects
         self.individuals = individuals
         self.logger.info("Adding individuals:{0}".format(
             ','.join([ind for ind in self.individuals])
         ))
+        
         # List of models of inheritance that should be prioritized.
         self.models_of_inheritance = models_of_inheritance 
         self.logger.info("Adding models of inheritance:{0}".format(
             ','.join(self.models_of_inheritance)
-        ))
-        self.trios = [] #Trios are a list of sets with trios.
-        self.duos = [] #Duos are a list of sets with trios.
+            )
+        )
+        
+        #Trios are a list of sets with trios.
+        self.trios = []
+        #Duos are a list of sets with trios.
+        self.duos = []
+        # Bool if there are any relations in the family
         self.no_relations = True
-        self.affected_individuals = set() # Set of affected individual id:s
+        # Set of affected individual id:s
+        self.affected_individuals = set()
     
     def family_check(self):
         """
         Check if the family members break the structure of the family. 
+        
         eg. nonexistent parent, wrong sex on parent etc. 
+        
         Also extracts all trios found, this is of help for many at the moment 
-        since GATK can only do phasing of trios and duos."""
+        since GATK can only do phasing of trios and duos.
+        """
         #TODO Make some tests for these
         self.logger.info("Checking family relations for {0}".format(
             self.family_id)
         )
         for individual_id in self.individuals:
+            
             self.logger.debug("Checking individual {0}".format(individual_id))
             individual = self.individuals[individual_id]
+            
             self.logger.debug("Checking if individual {0} is affected".format(
                 individual_id))
+            
             if individual.affected:
                 self.logger.debug("Found affected individual {0}".format(
                     individual_id)
@@ -84,6 +98,7 @@ class Family(object):
                 except PedigreeError as e:
                     self.logger.error(e.message)
                     raise e
+                
                 # Check if there is a trio
                 if individual.has_both_parents:
                     self.trios.append(set([individual_id, father, mother]))
@@ -91,24 +106,27 @@ class Family(object):
                     self.duos.append(set([individual_id, father]))
                 else:
                     self.duos.append(set([individual_id, mother]))
-                # self.check_grandparents(individual)
+                
+                ##TODO self.check_grandparents(individual)
+            
             # Annotate siblings:
             for individual_2_id in self.individuals:
                 if individual_id != individual_2_id:
                     if self.check_siblings(individual_id, individual_2_id):
                         individual.siblings.add(individual_2_id)
-                    # elif self.check_cousins(individual_id, individual_2_id):
+                    ##TODO elif self.check_cousins(individual_id, individual_2_id):
                     #     individual.cousins.add(individual_2_id)
     
     def check_parent(self, parent_id, father = False):
-        """Check if the parent info is correct. If an individual is not present in file raise exeption.
-            
-            Input: An id that represents a parent
-                   father = True/False
-            
-            Raises SyntaxError if
-                    The parent id is not present
-                    The gender of the parent is wrong.
+        """
+        Check if the parent info is correct. If an individual is not present in file raise exeption.
+
+        Input: An id that represents a parent
+               father = True/False
+
+        Raises SyntaxError if
+            The parent id is not present
+            The gender of the parent is wrong.
         """
         self.logger.info("Checking parent {0}".format(parent_id))
         if parent_id != '0':
@@ -127,7 +145,7 @@ class Family(object):
     
     def check_siblings(self, individual_1_id, individual_2_id):
         """
-        Check if two family members that are siblings.
+        Check if two family members are siblings.
         
         Arguments: 
             individual_1_id (str): The id of an individual
