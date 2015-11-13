@@ -34,17 +34,17 @@ class Family(object):
         self.logger = logging.getLogger(__name__)
         # Each family needs to have a family id
         self.family_id = family_id
-        self.logger.info("Initiating family with id:{0}".format(self.family_id))
+        self.logger.debug("Initiating family with id:{0}".format(self.family_id))
         
          # This is a dict with individual objects
         self.individuals = individuals
-        self.logger.info("Adding individuals:{0}".format(
+        self.logger.debug("Adding individuals:{0}".format(
             ','.join([ind for ind in self.individuals])
         ))
         
         # List of models of inheritance that should be prioritized.
         self.models_of_inheritance = models_of_inheritance 
-        self.logger.info("Adding models of inheritance:{0}".format(
+        self.logger.debug("Adding models of inheritance:{0}".format(
             ','.join(self.models_of_inheritance)
             )
         )
@@ -128,7 +128,7 @@ class Family(object):
             The parent id is not present
             The gender of the parent is wrong.
         """
-        self.logger.info("Checking parent {0}".format(parent_id))
+        self.logger.debug("Checking parent {0}".format(parent_id))
         if parent_id != '0':
             if parent_id not in self.individuals:
                 raise PedigreeError(self.family_id, parent_id, 
@@ -156,7 +156,7 @@ class Family(object):
                    False if they are not siblings
         """
         
-        self.logger.info("Checking if {0} and {1} are siblings".format(
+        self.logger.debug("Checking if {0} and {1} are siblings".format(
             individual_1_id, individual_2_id
         ))
         ind_1 = self.individuals[individual_1_id]
@@ -182,7 +182,7 @@ class Family(object):
                    False if they are not cousins
         
         """
-        self.logger.info("Checking if {0} and {1} are cousins".format(
+        self.logger.debug("Checking if {0} and {1} are cousins".format(
             individual_1_id, individual_2_id
         ))
         
@@ -198,7 +198,7 @@ class Family(object):
             
         """
         ind_id = individual_object.individual_id
-        self.logger.info("Trying to add {0}".format(ind_id))
+        self.logger.info("Adding individual {0}".format(ind_id))
         family_id = individual_object.family
         if family_id != self.family_id:
             raise PedigreeError(self.family, individual_object.individual_id,
@@ -206,7 +206,7 @@ class Family(object):
                                     "Family object!")
         else:
             self.individuals[ind_id] = individual_object
-            self.logger.info("Added individual {0} to family {1}".format(
+            self.logger.debug("Individual {0} added to family {1}".format(
                 ind_id, family_id
             ))
         return
@@ -279,7 +279,7 @@ class Family(object):
                     if info not in ped_header:
                         ped_header.append(info)
         
-        self.logger.info("Ped headers found: {0}".format(
+        self.logger.debug("Ped headers found: {0}".format(
             ', '.join(ped_header)
         ))
         
