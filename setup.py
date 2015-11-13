@@ -8,20 +8,10 @@ if sys.argv[-1] == 'publish':
     os.system('python setup.py sdist bdist_wheel upload')
     sys.exit()
 
-def parse_readme():
-    """Parse contents of the README."""
-    # Get the long description from the relevant file
-    here = os.path.abspath(os.path.dirname(__file__))
-    readme_path = os.path.join(here, 'README.md')
-    with codecs.open(readme_path, encoding='utf-8') as handle:
-        long_description = handle.read()
-
-    return long_description
-
 
 setup(
     name="ped_parser",
-    version="1.6.4",
+    version="1.6.5",
     description="A ped file parser.",
     author="Mans Magnusson",
     author_email="mans.magnusson@scilifelab.se",
@@ -45,5 +35,5 @@ setup(
         "Operating System :: MacOS :: MacOS X",
         "Intended Audience :: Science/Research",
     ],
-    long_description = parse_readme(),
+    long_description = "Parse pedigree files in different formats",
 )
