@@ -35,18 +35,18 @@ class Individual(object):
         #TODO write test to throw exceptions if malformed input.
         self.logger = logging.getLogger(__name__)
         
-        self.logger.info("Creating individual")
+        self.logger.debug("Creating individual")
         self.individual_id = ind #Individual Id STRING
-        self.logger.info("Individual id: {0}".format(self.individual_id))
+        self.logger.debug("Individual id: {0}".format(self.individual_id))
         
         self.family = family #Family Id STRING
-        self.logger.info("Family id: {0}".format(self.family))
+        self.logger.debug("Family id: {0}".format(self.family))
         
         self.mother = mother #Mother Id STRING
-        self.logger.info("Mother id: {0}".format(self.mother))
+        self.logger.debug("Mother id: {0}".format(self.mother))
         
         self.father = father # Father Id STRING
-        self.logger.info("Father id: {0}".format(self.father))
+        self.logger.debug("Father id: {0}".format(self.father))
         
         self.affected = False
         self.healthy = False
@@ -54,20 +54,20 @@ class Individual(object):
         
         # For madeline:
         self.proband = proband
-        self.logger.info("Proband: {0}".format(self.proband))
+        self.logger.debug("Proband: {0}".format(self.proband))
         
         self.consultand = consultand
-        self.logger.info("Consultand: {0}".format(self.consultand))
+        self.logger.debug("Consultand: {0}".format(self.consultand))
         
         self.alive = alive
-        self.logger.info("Alive: {0}".format(self.alive))
+        self.logger.debug("Alive: {0}".format(self.alive))
         
         try:
             self.sex = int(sex) # Sex Integer
-            self.logger.info("Sex: {0}".format(self.sex))
+            self.logger.debug("Sex: {0}".format(self.sex))
             
             self.phenotype = int(phenotype) # Phenotype INTEGER 
-            self.logger.info("Phenotype: {0}".format(self.phenotype))
+            self.logger.debug("Phenotype: {0}".format(self.phenotype))
         
         except ValueError:
             raise SyntaxError('Sex and phenotype have to be integers.')
@@ -82,7 +82,7 @@ class Individual(object):
         elif self.father != '0':
             self.has_parents = True
         
-        self.logger.info("Individual has parents: {0}".format(self.has_parents))
+        self.logger.debug("Individual has parents: {0}".format(self.has_parents))
         # These features will be added
         #TODO make use of family relations:
         self.siblings = set()
@@ -123,7 +123,7 @@ class Individual(object):
         """
         Return the individual info in a dictionary for json.
         """
-        self.logger.info("Returning json info")
+        self.logger.debug("Returning json info")
         individual_info = {
             'family_id': self.family,
             'id':self.individual_id, 
@@ -140,7 +140,7 @@ class Individual(object):
         Return the individual info in a madeline formated string
         """
         #Convert sex to madeleine type
-        self.logger.info("Returning madeline info")
+        self.logger.debug("Returning madeline info")
         if self.sex == 1:
             madeline_gender = 'M'
         elif self.sex == 2:

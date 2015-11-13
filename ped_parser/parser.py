@@ -314,7 +314,7 @@ class FamilyParser(object):
                         # If the id follow the CMMS convention we can
                         # do a sanity check
                         if self.check_cmms_id(ind_object.individual_id):
-                            self.logger.info("Id follows CMMS convention: {0}".format(
+                            self.logger.debug("Id follows CMMS convention: {0}".format(
                                 ind_object.individual_id
                             ))
                             self.logger.debug("Checking CMMS id affections status")
@@ -462,7 +462,7 @@ class FamilyParser(object):
             families (dict): A dictionary with the families
         """
         
-        self.logger.info("Return the information as a dictionary")
+        self.logger.debug("Return the information as a dictionary")
         families = {}
         for family_id in self.families:
             family = []
@@ -571,7 +571,7 @@ class FamilyParser(object):
                     if info not in ped_header:
                         ped_header.append(info)
         
-        self.logger.info("Ped headers found: {0}".format(
+        self.logger.debug("Ped headers found: {0}".format(
             ', '.join(ped_header)
         ))
         
