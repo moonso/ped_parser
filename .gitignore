@@ -12,3 +12,4 @@
 *.tmp
 htmlcov/
 .coverage
+.cache

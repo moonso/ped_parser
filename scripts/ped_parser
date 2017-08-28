@@ -14,6 +14,7 @@ from __future__ import print_function
 import sys
 import os
 import click
+import json
 
 from datetime import datetime
 
@@ -122,9 +123,9 @@ def cli(family_file, family_type, outfile, to_json, to_madeline,
 
     if to_json:
         if outfile:
-            outfile.write(my_parser.to_json())
+            json.dump(my_parser.to_json(), outfile)
         else:
-            print(my_parser.to_json())
+            print(json.dumps(my_parser.to_json()))
 
     elif to_madeline:
         for line in my_parser.to_madeline():

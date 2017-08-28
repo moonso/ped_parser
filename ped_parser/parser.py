@@ -43,11 +43,8 @@ Created by Måns Magnusson on 2013-01-17.
 Copyright (c) 2013 __MoonsoInc__. All rights reserved.
 """
 
-from __future__ import print_function
-
 import json
 import logging
-import click
 
 from string import whitespace
 from ped_parser import (Individual, Family)
@@ -67,7 +64,7 @@ AD_NAMES = ['AD', 'AD_dn', 'AD_denovo']
 X_NAMES = ['X', 'X_dn', 'X_denovo']
 NA_NAMES = ['NA', 'Na', 'na', '.']
 
-
+logger = logging.getLogger(__name__)
 
 class FamilyParser(object):
     """
@@ -85,30 +82,18 @@ class FamilyParser(object):
         """
         super(FamilyParser, self).__init__()
         
-        if __name__ == "__main__":
-            self.logger = logging.getLogger("ped_parser.FamilyParser")
-        else:
-            self.logger = logging.getLogger(__name__)
-        
-        self.logger.info("Initializing family parser")
-        
         self.cmms_check = cmms_check
         self.family_type = family_type
-        self.logger.info("Family type:{0}".format(family_type))
+        logger.debug("Family type:{0}".format(family_type))
         self.families = {}
         self.individuals = {}
+        
         self.legal_ar_hom_names = AR_HOM_NAMES
-        self.logger.debug("Legal AR hom names:{0}".format(AR_HOM_NAMES))
         self.legal_ar_hom_dn_names = AR_HOM_DN_NAMES
-        self.logger.debug("Legal AR dn names:{0}".format(AR_HOM_DN_NAMES))
         self.legal_compound_names = COMPOUND_NAMES
-        self.logger.debug("Legal AR compound names:{0}".format(COMPOUND_NAMES))
         self.legal_ad_names = AD_NAMES
-        self.logger.debug("Legal AD compound names:{0}".format(AD_NAMES))
         self.legal_x_names = X_NAMES
-        self.logger.debug("Legal X hom names:{0}".format(X_NAMES))
         self.legal_na_names = NA_NAMES
-        self.logger.debug("Legal NA names:{0}".format(NA_NAMES))
         
         self.header = ['family_id', 'sample_id', 'father_id', 
                        'mother_id', 'sex', 'phenotype']
@@ -223,9 +208,7 @@ class FamilyParser(object):
                 try:
                     self.check_line_length(splitted_line, 6)
                 except WrongLineFormat as e:
-                    self.logger.error(e)
-                    self.logger.info("Ped line: {0}".format(e.ped_line))
-                    raise e
+                    raise SyntaxError("ped line is in wrong format")
                 
                 sample_dict = dict(zip(self.header, splitted_line))
                 family_id = sample_dict['family_id']
@@ -256,7 +239,7 @@ class FamilyParser(object):
         for line in family_file:
             if line.startswith('#'):
                 alternative_header = line[1:].rstrip().split('\t')
-                self.logger.info("Alternative header found: {0}".format(line))
+                logger.debug("Alternative header found: {0}".format(line))
             elif line.strip():
                 if not alternative_header:
                     raise WrongLineFormat(message="Alternative ped files must have "\
@@ -269,10 +252,10 @@ class FamilyParser(object):
                 try:
                     self.check_line_length(splitted_line, len(alternative_header))
                 except SyntaxError as e:
-                    self.logger.error('Number of entrys differ from header.')
-                    self.logger.error("Header:\n{0}".format('\t'.join(alternative_header)))
-                    self.logger.error("Ped Line:\n{0}".format('\t'.join(splitted_line)))
-                    self.logger.error("Length of Header: {0}. Length of "\
+                    logger.error('Number of entrys differ from header.')
+                    logger.error("Header:\n{0}".format('\t'.join(alternative_header)))
+                    logger.error("Ped Line:\n{0}".format('\t'.join(splitted_line)))
+                    logger.error("Length of Header: {0}. Length of "\
                                       "Ped line: {1}".format(
                                           len(alternative_header), 
                                           len(splitted_line))
@@ -314,19 +297,19 @@ class FamilyParser(object):
                         # If the id follow the CMMS convention we can
                         # do a sanity check
                         if self.check_cmms_id(ind_object.individual_id):
-                            self.logger.debug("Id follows CMMS convention: {0}".format(
+                            logger.debug("Id follows CMMS convention: {0}".format(
                                 ind_object.individual_id
                             ))
-                            self.logger.debug("Checking CMMS id affections status")
+                            logger.debug("Checking CMMS id affections status")
                             try:
                                 self.check_cmms_affection_status(ind_object)
                             except WrongAffectionStatus as e:
-                                self.logger.error("Wrong affection status for"\
+                                logger.error("Wrong affection status for"\
                                 " {0}. Affection status can be in"\
                                 " {1}".format(e.cmms_id, e.valid_statuses))
                                 raise e
                             except WrongPhenotype as e:
-                                self.logger.error("Affection status for {0} "\
+                                logger.error("Affection status for {0} "\
                                 "({1}) disagrees with phenotype ({2})".format(
                                     e.cmms_id, e.phenotype, e.affection_status
                                 ))
@@ -335,7 +318,7 @@ class FamilyParser(object):
                             try:
                                 self.check_cmms_gender(ind_object)
                             except WrongGender as e:
-                                self.logger.error("Gender code for id {0}"\
+                                logger.error("Gender code for id {0}"\
                                 "({1}) disagrees with sex:{2}".format(
                                     e.cmms_id, e.sex_code, e.sex
                                 ))
@@ -447,7 +430,7 @@ class FamilyParser(object):
             elif model in self.legal_na_names:
                 model = 'NA'
             else:
-                self.logger.warning("Incorrect model name: {0}."\
+                logger.warning("Incorrect model name: {0}."\
                                     " Ignoring model.".format(model))
             correct_model_names.add(model)
         return correct_model_names
@@ -462,17 +445,17 @@ class FamilyParser(object):
             families (dict): A dictionary with the families
         """
         
-        self.logger.debug("Return the information as a dictionary")
+        logger.debug("Return the information as a dictionary")
         families = {}
         for family_id in self.families:
             family = []
             for individual_id in self.families[family_id].individuals:
                 individual = self.families[family_id].individuals[individual_id]
                 family.append(individual.to_json())
-                self.logger.debug("Adding individual {0} to family {1}".format(
+                logger.debug("Adding individual {0} to family {1}".format(
                     individual_id, family_id
                 ))
-            self.logger.debug("Adding family {0}".format(family_id))
+            logger.debug("Adding family {0}".format(family_id))
             families[family_id] = family
         
         return families
@@ -506,11 +489,10 @@ class FamilyParser(object):
         Yields:
           the information in json format
         """
-        #json_families = []
+        json_families = []
         for family_id in self.families:
-            #json_families.append(self.families[family_id].to_json())
-            yield self.families[family_id].to_json()
-        #return json.dumps(json_families)
+            json_families.append(self.families[family_id].to_json())
+        return json_families
     
     def to_madeline(self):
         """
@@ -571,7 +553,7 @@ class FamilyParser(object):
                     if info not in ped_header:
                         ped_header.append(info)
         
-        self.logger.debug("Ped headers found: {0}".format(
+        logger.debug("Ped headers found: {0}".format(
             ', '.join(ped_header)
         ))
         
@@ -597,80 +579,3 @@ class FamilyParser(object):
                 yield '\t'.join(ped_info)
     
 
-@click.command()
-@click.argument('family_file', 
-                    nargs=1, 
-                    type=click.File(),
-                    metavar="<family_file> or '-'"
-)
-@click.option('-t', '--family_type',
-                    type=click.Choice(['ped', 'alt', 'cmms', 'mip']),
-                    default='ped',
-                    help='If the analysis use one of the known setups, please specify which one. Default is ped'
-)
-@click.option('--to_json',
-                    is_flag=True,
-                    help='Print the ped file in json format'
-)
-@click.option('--to_madeline',
-                    is_flag=True,
-                    help='Print the ped file in madeline format'
-)
-@click.option('--to_ped',
-                    is_flag=True,
-                    help='Print the ped file in ped format with headers'
-)
-@click.option('--to_dict',
-                    is_flag=True,
-                    help='Print the ped file in ped format with headers'
-)
-@click.option('-o', '--outfile',
-                type=click.File('a')
-)
-@click.option('-l', '--logfile',
-                    type=click.Path(exists=False),
-                    help="Path to log file. If none logging is "\
-                          "printed to stderr."
-)
-@click.option('--loglevel',
-                    type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR',
-                                        'CRITICAL']),
-                    default='INFO',
-                    help="Set the level of log output."
-)
-def cli(family_file, family_type, to_json, to_madeline, to_ped, to_dict, 
-        outfile, logfile, loglevel):
-    """Cli for testing the ped parser."""
-    from pprint import pprint as pp
-    
-    my_parser = FamilyParser(family_file, family_type)
-    
-    if to_json:
-        if outfile:
-            outfile.write(my_parser.to_json())
-        else:
-            print(my_parser.to_json())
-    elif to_madeline:
-        for line in my_parser.to_madeline():
-            if outfile:
-                outfile.write(line + '\n')
-            else:
-                print(line)
-            
-    elif to_ped:
-        for line in my_parser.to_ped():
-            if outfile:
-                outfile.write(line + '\n')
-            else:
-                print(line)
-            
-    elif to_dict:
-        pp(my_parser.to_dict())
-    
-        
-
-
-if __name__ == '__main__':
-    from ped_parser import init_log, logger
-    init_log(logger, loglevel='DEBUG')
-    cli()

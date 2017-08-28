@@ -20,33 +20,32 @@ Created by Måns Magnusson on 2012-10-31.
 Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 """
 
-from __future__ import print_function
-
 import sys
 import os
 import logging
 
+from .exceptions import PedigreeError
+
+logger = logging.getLogger(__name__)
 
 class Individual(object):
     """docstring for Individual"""
-    def __init__(self, ind, family='0', mother='0', father='0',sex='0',phenotype='0',
-        genetic_models=None, proband='.', consultand='.', alive='.'):
-        
-        #TODO write test to throw exceptions if malformed input.
-        self.logger = logging.getLogger(__name__)
-        
-        self.logger.debug("Creating individual")
+    def __init__(self, ind, family='0', mother='0', father='0',sex='0',
+                 phenotype='0', genetic_models=None, proband='.', 
+                 consultand='.', alive='.'):
+                
+        logger.debug("Creating individual")
         self.individual_id = ind #Individual Id STRING
-        self.logger.debug("Individual id: {0}".format(self.individual_id))
+        logger.debug("Individual id: {0}".format(self.individual_id))
         
         self.family = family #Family Id STRING
-        self.logger.debug("Family id: {0}".format(self.family))
+        logger.debug("Family id: {0}".format(self.family))
         
         self.mother = mother #Mother Id STRING
-        self.logger.debug("Mother id: {0}".format(self.mother))
+        logger.debug("Mother id: {0}".format(self.mother))
         
         self.father = father # Father Id STRING
-        self.logger.debug("Father id: {0}".format(self.father))
+        logger.debug("Father id: {0}".format(self.father))
         
         self.affected = False
         self.healthy = False
@@ -54,23 +53,23 @@ class Individual(object):
         
         # For madeline:
         self.proband = proband
-        self.logger.debug("Proband: {0}".format(self.proband))
+        logger.debug("Proband: {0}".format(self.proband))
         
         self.consultand = consultand
-        self.logger.debug("Consultand: {0}".format(self.consultand))
+        logger.debug("Consultand: {0}".format(self.consultand))
         
         self.alive = alive
-        self.logger.debug("Alive: {0}".format(self.alive))
+        logger.debug("Alive: {0}".format(self.alive))
         
         try:
             self.sex = int(sex) # Sex Integer
-            self.logger.debug("Sex: {0}".format(self.sex))
+            logger.debug("Sex: {0}".format(self.sex))
             
             self.phenotype = int(phenotype) # Phenotype INTEGER 
-            self.logger.debug("Phenotype: {0}".format(self.phenotype))
+            logger.debug("Phenotype: {0}".format(self.phenotype))
         
         except ValueError:
-            raise SyntaxError('Sex and phenotype have to be integers.')
+            raise PedigreeError('Sex and phenotype have to be integers.')
             
         self.has_parents = False
         self.has_both_parents = False
@@ -82,7 +81,7 @@ class Individual(object):
         elif self.father != '0':
             self.has_parents = True
         
-        self.logger.debug("Individual has parents: {0}".format(self.has_parents))
+        logger.debug("Individual has parents: {0}".format(self.has_parents))
         # These features will be added
         #TODO make use of family relations:
         self.siblings = set()
@@ -123,7 +122,7 @@ class Individual(object):
         """
         Return the individual info in a dictionary for json.
         """
-        self.logger.debug("Returning json info")
+        logger.debug("Returning json info")
         individual_info = {
             'family_id': self.family,
             'id':self.individual_id, 
@@ -140,7 +139,7 @@ class Individual(object):
         Return the individual info in a madeline formated string
         """
         #Convert sex to madeleine type
-        self.logger.debug("Returning madeline info")
+        logger.debug("Returning madeline info")
         if self.sex == 1:
             madeline_gender = 'M'
         elif self.sex == 2:

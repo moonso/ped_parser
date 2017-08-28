@@ -11,12 +11,12 @@ def test_alternative_parser():
         family_parser = parser.FamilyParser(handle, family_type='alt')
 
     # we've only loaded one family
-    ped = family_parser.families.values()[0]
+    ped = list(family_parser.families.values())[0]
 
     assert ped.family_id == 'family_id'
     assert len(ped.individuals) == 1
 
-    sample = ped.individuals.values()[0]
+    sample = list(ped.individuals.values())[0]
     assert sample.extra_info['Capture_kit'] == 'Agilent_SureSelect.V5'
 
     # TODO: test with optional CMMS check

@@ -44,7 +44,7 @@ class TestTrio(object):
     
     def test_standard_trio_proband_missing_column(self):
         """Test if the file is parsed in a correct way."""
-        with pytest.raises(WrongLineFormat):
+        with pytest.raises(SyntaxError):
             family_parser = parser.FamilyParser(open(self.trio_file.name, 'r'))
 
 
