@@ -11,7 +11,7 @@ if sys.argv[-1] == 'publish':
 
 setup(
     name="ped_parser",
-    version="1.6.5",
+    version="1.6.6",
     description="A ped file parser.",
     author="Mans Magnusson",
     author_email="mans.magnusson@scilifelab.se",
