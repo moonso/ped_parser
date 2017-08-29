@@ -48,7 +48,9 @@ A consultand is an individual who has sought genetic counseling or testing.
 ```Consultand - 'Yes', 'No', 'Unknown' or '.'```
 ```Alive - 'Yes', 'No', 'Unknown' or '.'```
 
-##Usage##
+
+
+## Usage ##
 
 ped_parser can be used as a standalone command line tool to convert ped files and ped like files to json or madeline2 format.
 Or just to get information about the content of a pedigree file.
@@ -67,7 +69,7 @@ When parsing the .ped file the following will be checked:
 - Identify all trios (or duos) found in the pedigree
 
 
-##Alternative .ped files##
+## Alternative .ped files ##
 
 ped\_parser does also support modified .ped files (some users want to store extra family and/or individual information in the pedigree file). In this case ped\_parser will look at the first 6 columns and work as described above.
 In this case use:

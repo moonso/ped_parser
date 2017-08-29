@@ -17,14 +17,12 @@ Created by Måns Magnusson on 2014-02-05.
 Copyright (c) 2014 __MyCompanyName__. All rights reserved.
 """
 
-from __future__ import print_function
-
 import sys
 import os
 import logging
-import click
 
 from ped_parser.exceptions import PedigreeError
+
 
 class Family(object):
     """Base class for the family parsers."""
@@ -32,6 +30,7 @@ class Family(object):
                 logger=None, logfile=None, loglevel=None):
         super(Family, self).__init__()
         self.logger = logging.getLogger(__name__)
+        
         # Each family needs to have a family id
         self.family_id = family_id
         self.logger.debug("Initiating family with id:{0}".format(self.family_id))
@@ -68,7 +67,7 @@ class Family(object):
         since GATK can only do phasing of trios and duos.
         """
         #TODO Make some tests for these
-        self.logger.info("Checking family relations for {0}".format(
+        self.logger.debug("Checking family relations for {0}".format(
             self.family_id)
         )
         for individual_id in self.individuals:
@@ -96,7 +95,6 @@ class Family(object):
                     self.check_parent(father, father=True)
                     self.check_parent(mother, father=False)
                 except PedigreeError as e:
-                    self.logger.error(e.message)
                     raise e
                 
                 # Check if there is a trio
@@ -198,7 +196,7 @@ class Family(object):
             
         """
         ind_id = individual_object.individual_id
-        self.logger.info("Adding individual {0}".format(ind_id))
+        self.logger.debug("Adding individual {0}".format(ind_id))
         family_id = individual_object.family
         if family_id != self.family_id:
             raise PedigreeError(self.family, individual_object.individual_id,
@@ -245,8 +243,8 @@ class Family(object):
         Returns:
             list : A list with dictionaries
         """
-        
-        return [self.individuals[ind].to_json() for ind in self.individuals]
+        json_family = [self.individuals[ind].to_json() for ind in self.individuals]
+        return json_family
     
     def to_ped(self, outfile=None):
         """
@@ -318,26 +316,3 @@ class Family(object):
         family = list(self.individuals.keys())
         return "\t".join(family)
 
-@click.command()
-@click.option('-o', '--outfile',
-                type=click.File('a')
-                )
-def cli(outfile):
-    from ped_parser.individual import Individual
-    proband = Individual('proband', family='1', mother='mother', father='father',sex='1',phenotype='2')
-    mother = Individual('mother', family='1', mother='0', father='0',sex='2',phenotype='1')
-    father = Individual('father', family='1', mother='0', father='0',sex='1',phenotype='1')
-    proband.extra_info['Proband'] = 'Yes'
-    my_family = Family(family_id='1')
-    my_family.add_individual(proband)
-    my_family.add_individual(mother)
-    my_family.add_individual(father)
-    my_family.to_ped(outfile)
-    # print(repr(proband))
-
-
-if __name__ == '__main__':
-    from ped_parser import logger
-    from ped_parser import init_log
-    init_log(logger, loglevel="DEBUG")
-    cli()
